@@ -558,9 +558,10 @@ h6 {
     padding: var(--space-sm);
     text-decoration: none;
     color: var(--text-muted);
-    transition: all var(--transition-base);
+    transition: color var(--transition-base);
     border-radius: var(--radius-md);
     min-width: 64px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item:hover {
@@ -1264,15 +1265,16 @@ h6 {
     left: 0;
     right: 0;
     background: var(--bg-secondary);
-    border-top: 1px solid var(--border-medium);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     padding: var(--space-lg);
     padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
     transform: translateY(100%);
     transition: transform var(--transition-smooth);
     z-index: var(--z-modal);
-    max-height: 60vh;
+    max-height: 65vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .more-menu-sheet.active {
@@ -1304,7 +1306,8 @@ h6 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-sm);
+    justify-content: center;
+    gap: var(--space-xs);
     padding: var(--space-md);
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
@@ -1312,6 +1315,7 @@ h6 {
     color: var(--text-secondary);
     transition: all var(--transition-fast);
     min-height: var(--touch-target-min);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .more-menu-item:hover,
