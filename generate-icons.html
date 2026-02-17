@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>GentleFinances — PWA Icon Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            gap: 30px;
+        }
+
+        h1 {
+            color: #C5A058;
+        }
+
+        .icon-row {
+            display: flex;
+            gap: 40px;
+            align-items: flex-end;
+        }
+
+        .icon-box {
+            text-align: center;
+        }
+
+        canvas {
+            border: 1px solid #333;
+            border-radius: 12px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: #C5A058;
+            color: #0D0D0D;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        a:hover {
+            background: #D4AF37;
+        }
+
+        .info {
+            color: #888;
+            font-size: 14px;
+            max-width: 600px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p class="info">Haz clic en los botones para descargar los iconos PNG. Guárdalos en
+        <code>GentleFinance/assets/icons/</code></p>
+
+    <div class="icon-row">
+        <div class="icon-box">
+            <h3>512 × 512</h3>
+            <canvas id="c512" width="512" height="512"></canvas><br>
+            <a id="dl512" download="icon-512.png">⬇ Descargar icon-512.png</a>
+        </div>
+        <div class="icon-box">
+            <h3>192 × 192</h3>
+            <canvas id="c192" width="192" height="192"></canvas><br>
+            <a id="dl192" download="icon-192.png">⬇ Descargar icon-192.png</a>
+        </div>
+    </div>
+
+    <script>
+        function drawIcon(canvas) {
+            const s = canvas.width;
+            const ctx = canvas.getContext('2d');
+            const r = s * 0.156; // corner radius
+
+            // Background
+            ctx.beginPath();
+            ctx.roundRect(0, 0, s, s, r);
+            ctx.fillStyle = '#0D0D0D';
+            ctx.fill();
+
+            // Subtle gold border
+            const grad = ctx.createLinearGradient(0, 0, s, s);
+            grad.addColorStop(0, '#E8D5A3');
+            grad.addColorStop(0.5, '#D4AF37');
+            grad.addColorStop(1, '#C5A058');
+
+            ctx.beginPath();
+            const bw = s * 0.008;
+            ctx.roundRect(bw * 2, bw * 2, s - bw * 4, s - bw * 4, r - bw * 2);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = bw;
+            ctx.globalAlpha = 0.3;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // Setup for GF monogram
+            ctx.save();
+            ctx.translate(s * 0.5, s * 0.5);
+            const scale = s / 100 * 1.4;
+            ctx.scale(scale, scale);
+            ctx.translate(-50, -50);
+
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Glow effect
+            ctx.shadowColor = '#D4AF37';
+            ctx.shadowBlur = s * 0.015;
+
+            // G letter
+            ctx.globalAlpha = 0.95;
+            ctx.beginPath();
+            ctx.moveTo(25, 70);
+            ctx.lineTo(25, 35);
+            ctx.bezierCurveTo(25, 20, 45, 15, 50, 25);
+            ctx.lineTo(50, 45);
+            ctx.lineTo(40, 45);
+            ctx.stroke();
+
+            // F vertical
+            ctx.beginPath();
+            ctx.moveTo(55, 25);
+            ctx.lineTo(55, 75);
+            ctx.stroke();
+
+            // F top bar
+            ctx.beginPath();
+            ctx.moveTo(55, 25);
+            ctx.lineTo(75, 25);
+            ctx.stroke();
+
+            // F middle bar
+            ctx.beginPath();
+            ctx.moveTo(55, 45);
+            ctx.lineTo(70, 45);
+            ctx.stroke();
+
+            // Growth line
+            ctx.globalAlpha = 0.5;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(30, 75);
+            ctx.quadraticCurveTo(50, 65, 75, 35);
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+
+            // Accent dot
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(75, 35, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // Download link
+            const id = 'dl' + s;
+            const link = document.getElementById(id);
+            if (link) {
+                link.href = canvas.toDataURL('image/png');
+            }
+        }
+
+        drawIcon(document.getElementById('c512'));
+        drawIcon(document.getElementById('c192'));
+    </script>
+</body>
+
+</html>

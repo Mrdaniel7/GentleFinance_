@@ -1,0 +1,642 @@
+/**
+ * Controlador de Informes Financieros
+ * Refactorizado para máxima robustez y manejo de estados vacíos.
+ */
+
+const Reports = {
+    // Estado interno
+    period: 'month',
+    charts: {},
+    initialized: false,
+    loading: false,
+
+    // Contenedor de datos centralizado
+    data: {
+        transactions: [],
+        holdings: [],
+        categories: [],
+        merchants: [],
+        trend: { labels: [], income: [], expenses: [] },
+        daily: [],
+        dailyLabels: [],
+        wealthDistribution: [],
+        totalLiquid: 0
+    },
+
+    // --- INICIALIZACIÓN ---
+
+    async init() {
+        if (this.initialized) {
+            console.log('📊 Reports: Already initialized, reloading data...');
+            await this.loadData();
+            return;
+        }
+
+        console.log('📊 Reports: Initializing...');
+
+        // 1. Configurar Listeners de UI
+        this.setupListeners();
+
+        // 2. Cargar Datos
+        await this.loadData();
+
+        this.initialized = true;
+    },
+
+    setupListeners() {
+        // Botones de período
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                // UI Toggle
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+
+                // Set Period
+                const period = e.target.textContent.toLowerCase().includes('sem') ? 'week' :
+                    e.target.textContent.toLowerCase().includes('mes') ? 'month' :
+                        e.target.textContent.toLowerCase().includes('año') ? 'year' : 'month';
+                this.setPeriod(period);
+            };
+        });
+
+        // Resize Listener para redibujar gráficos
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (document.getElementById('view-reports').offsetParent !== null) {
+                    this.renderCharts();
+                }
+            }, 300);
+        });
+    },
+
+    // --- CARGA DE DATOS ---
+
+    async loadData() {
+        this.loading = true;
+        console.log('📊 Reports: Starting Data Load...');
+
+        try {
+            // Carga paralela de fuentes de datos
+            const [txResult, portfolioResult] = await Promise.allSettled([
+                // 1. Transactions
+                window.FirestoreService?.transactions ?
+                    window.FirestoreService.transactions.getAll() : Promise.resolve([]),
+
+                // 2. Portfolio (Init + Get Investments)
+                (async () => {
+                    if (window.PortfolioManager && !window.PortfolioManager.isInitialized) {
+                        try { await window.PortfolioManager.init(); } catch (e) { console.warn('Portfolio init error', e); }
+                    }
+                    return window.PortfolioManager?.investments ||
+                        [];
+                })()
+            ]);
+
+            // Procesar resultados
+            const transactions = txResult.status === 'fulfilled' ? txResult.value : [];
+            const holdings = portfolioResult.status === 'fulfilled' ? portfolioResult.value : [];
+
+            console.log(`📊 Reports: Loaded ${transactions.length} transactions and ${holdings.length} holdings.`);
+
+            // Guardar datos crudos
+            this.data.transactions = transactions;
+            this.data.holdings = holdings;
+
+            // Procesar datos para gráficos
+            this.processData();
+
+        } catch (error) {
+            console.error('💥 Reports: Critical Error loading data:', error);
+        } finally {
+            this.loading = false;
+            // SIEMPRE intentar renderizar
+            this.renderCharts();
+        }
+    },
+
+    setPeriod(period) {
+        console.log(`📊 Reports: Switching period to ${period}`);
+        this.period = period;
+        // Reprocesar datos con nuevo filtro de fecha
+        this.processData();
+        this.renderCharts();
+        this.showToast(`Vista: ${this.getPeriodLabel(period)}`);
+    },
+
+    // --- PROCESAMIENTO DE DATOS ---
+
+    processData() {
+        const { transactions, holdings } = this.data;
+
+        // 1. Calcular Totales Globales (No dependen del período)
+        this.data.totalLiquid = transactions.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+        // 2. Filtrar transacciones por período seleccionado
+        const filteredTx = this.filterTransactionsByPeriod(transactions, this.period);
+
+        // 3. Procesar Tendencias e Ingresos/Gastos (Datos filtrados)
+        this.processTrends(filteredTx);
+        this.processCategories(filteredTx);
+        this.processPayerAnalysis(filteredTx); // Top Merchants
+
+        // 4. Procesar Patrimonio (Datos globales/actuales)
+        this.processWealth(holdings, this.data.totalLiquid);
+
+        console.log('📊 Reports: Data processing complete.', this.data);
+    },
+
+    filterTransactionsByPeriod(transactions, period) {
+        if (!transactions || transactions.length === 0) return [];
+
+        const now = new Date();
+        const cutoff = new Date();
+
+        switch (period) {
+            case 'week': cutoff.setDate(now.getDate() - 7); break;
+            case 'month': cutoff.setDate(now.getDate() - 30); break;
+            case 'quarter': cutoff.setMonth(now.getMonth() - 3); break;
+            case 'year': cutoff.setFullYear(now.getFullYear() - 1); break;
+            default: cutoff.setDate(now.getDate() - 30); // Default month
+        }
+
+        return transactions.filter(t => {
+            const d = t.dateObj || (t.date?.toDate ? t.date.toDate() : new Date(t.date));
+            return d >= cutoff;
+        });
+    },
+
+    processTrends(transactions) {
+        // Inicializar estructura
+        let income = 0, expenses = 0;
+
+        // Calcular sumas totales del período
+        transactions.forEach(t => {
+            if (t.amount > 0) income += t.amount;
+            else expenses += Math.abs(t.amount);
+        });
+
+        // Actualizar UI de KPIs
+        this.updateKPIs(income, expenses);
+
+        // Generar datos para gráficos de evolución (Trend & Daily)
+        // ... Lógica simplificada de agrupación ...
+
+        // 1. Agrupación Dinámica
+        const isDaily = this.period === 'week' || this.period === 'month';
+        const groups = {};
+        const labels = [];
+        const dataIncome = [];
+        const dataExpense = [];
+
+        if (isDaily) {
+            // Últimos X días
+            const days = this.period === 'week' ? 7 : 30;
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toLocaleDateString(window.Utils?._getLocale ? Utils._getLocale() : 'es-ES', { day: 'numeric', month: 'short' });
+                labels.push(key);
+                groups[key] = { inc: 0, exp: 0 };
+            }
+
+            transactions.forEach(t => {
+                const d = t.dateObj || (t.date?.toDate ? t.date.toDate() : new Date(t.date));
+                const key = d.toLocaleDateString(window.Utils?._getLocale ? Utils._getLocale() : 'es-ES', { day: 'numeric', month: 'short' });
+                if (groups[key]) {
+                    if (t.amount > 0) groups[key].inc += t.amount;
+                    else groups[key].exp += Math.abs(t.amount);
+                }
+            });
+        } else {
+            // Últimos 12 meses
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                const key = d.toLocaleDateString(window.Utils?._getLocale ? Utils._getLocale() : 'es-ES', { month: 'short' });
+                labels.push(key);
+                groups[key] = { inc: 0, exp: 0 };
+            }
+
+            transactions.forEach(t => {
+                const d = t.dateObj || (t.date?.toDate ? t.date.toDate() : new Date(t.date));
+                const key = d.toLocaleDateString(window.Utils?._getLocale ? Utils._getLocale() : 'es-ES', { month: 'short' });
+                if (groups[key]) {
+                    if (t.amount > 0) groups[key].inc += t.amount;
+                    else groups[key].exp += Math.abs(t.amount);
+                }
+            });
+        }
+
+        // Flatten
+        labels.forEach(l => {
+            dataIncome.push(groups[l]?.inc || 0);
+            dataExpense.push(groups[l]?.exp || 0);
+        });
+
+        this.data.trend = { labels, income: dataIncome, expenses: dataExpense };
+
+        // Daily Spend Bar Chart (Only Expenses)
+        this.data.dailyLabels = labels; // Reusar etiquetas
+        this.data.daily = dataExpense;  // Reusar gastos
+    },
+
+    processCategories(transactions) {
+        const catMap = {};
+        transactions.forEach(t => {
+            if (t.amount < 0) { // Solo gastos
+                const cat = t.category || 'Otros';
+                catMap[cat] = (catMap[cat] || 0) + Math.abs(t.amount);
+            }
+        });
+
+        this.data.categories = Object.entries(catMap)
+            .map(([name, amount]) => ({
+                name: this.getCategoryName(name),
+                amount,
+                color: this.getCategoryColor(name)
+            }))
+            .sort((a, b) => b.amount - a.amount);
+    },
+
+    processPayerAnalysis(transactions) {
+        const merchMap = {};
+        transactions.forEach(t => {
+            if (t.amount < 0) {
+                const name = t.description || t.merchantName || 'Desconocido';
+                merchMap[name] = (merchMap[name] || 0) + Math.abs(t.amount);
+            }
+        });
+
+        this.data.merchants = Object.entries(merchMap)
+            .map(([name, amount]) => ({ name, amount }))
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 5);
+    },
+
+    processWealth(holdings, liquidCash) {
+        // 1. Distribución (Donut)
+        const distribution = {
+            'Ahorros': liquidCash > 0 ? liquidCash : 0, // Nunca negativo en distribución
+            'Inversiones': 0,
+            'Cripto': 0,
+            'Inmuebles': 0
+        };
+
+        holdings.forEach(h => {
+            const val = (parseFloat(h.quantity) || 0) * (parseFloat(h.currentPrice || h.price) || 0);
+            const type = (h.type || h.assetType || '').toLowerCase();
+
+            if (type === 'crypto') distribution['Cripto'] += val;
+            else if (type.includes('real') || type.includes('inmueble')) distribution['Inmuebles'] += val;
+            else distribution['Inversiones'] += val;
+        });
+
+        this.data.wealthDistribution = Object.entries(distribution)
+            .map(([name, amount]) => ({
+                name,
+                amount,
+                color: this.getAssetColor(name)
+            }));
+
+        // 2. Evolución (Line) - Simulación simple basada en el trend histórico de transacciones
+        // Idealmente tendríamos snapshots históricos de patrimonio, pero usaremos el cashflow para aproximar.
+    },
+
+    // --- RENDERIZADO (ATÓMICO Y ROBUSTO) ---
+
+    renderCharts() {
+        console.log('📊 Reports: Rendering Charts...');
+
+        // Wrap in animation frame to ensure DOM is ready
+        requestAnimationFrame(() => {
+            this.renderCategoryChart();
+            this.renderTrendChart();
+            this.renderDailyChart();
+            this.renderWealthDistributionChart();
+            this.renderWealthEvolutionChart();
+
+            // HTML lists
+            this.renderTopMerchants();
+            this.renderCategoryBreakdown();
+        });
+    },
+
+    // 1. Gastos por Categoría
+    renderCategoryChart() {
+        const ctx = this.getContext('reports-categoryChart');
+        if (!ctx) return;
+
+        const data = this.data.categories;
+        const hasData = data && data.length > 0;
+
+        this.createChart(ctx, 'category', {
+            type: 'doughnut',
+            data: {
+                labels: hasData ? data.map(d => d.name) : ['Sin Gastos'],
+                datasets: [{
+                    data: hasData ? data.map(d => d.amount) : [1],
+                    backgroundColor: hasData ? data.map(d => d.color) : ['#333333'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: '#888' } } } }
+        });
+    },
+
+    // 2. Tendencia Ingresos vs Gastos
+    renderTrendChart() {
+        const ctx = this.getContext('reports-trendChart');
+        if (!ctx) return;
+
+        const { labels, income, expenses } = this.data.trend;
+        const hasData = labels.length > 0 && (income.some(v => v > 0) || expenses.some(v => v > 0));
+
+        this.createChart(ctx, 'trend', {
+            type: 'line',
+            data: {
+                labels: hasData ? labels : ['Sin datos'],
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: hasData ? income : [0],
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        fill: true, tension: 0.4
+                    },
+                    {
+                        label: 'Gastos',
+                        data: hasData ? expenses : [0],
+                        borderColor: '#f87171',
+                        backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                        fill: true, tension: 0.4
+                    }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#888' } } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { color: '#333' } } } }
+        });
+    },
+
+    // 3. Gasto Diario (Barras)
+    renderDailyChart() {
+        const ctx = this.getContext('reports-dailyChart');
+        if (!ctx) return;
+
+        const { dailyLabels, daily } = this.data;
+        const hasData = daily.some(v => v > 0);
+
+        this.createChart(ctx, 'daily', {
+            type: 'bar',
+            data: {
+                labels: hasData ? dailyLabels : ['Sin gastos'],
+                datasets: [{
+                    label: 'Gasto Diario',
+                    data: hasData ? daily : [0],
+                    backgroundColor: '#f87171',
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { grid: { color: '#333' } } } }
+        });
+    },
+
+    // 4. Distribución Patrimonio
+    renderWealthDistributionChart() {
+        const ctx = this.getContext('reports-wealthDistributionChart');
+        if (!ctx) return;
+
+        const data = this.data.wealthDistribution;
+        const hasData = data.some(d => d.amount > 0);
+        const filtered = data.filter(d => d.amount > 0);
+
+        this.createChart(ctx, 'wealthDist', {
+            type: 'doughnut',
+            data: {
+                labels: hasData ? filtered.map(d => d.name) : ['Sin Saldo'],
+                datasets: [{
+                    data: hasData ? filtered.map(d => d.amount) : [1],
+                    backgroundColor: hasData ? filtered.map(d => d.color) : ['#333'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '70%', plugins: { legend: { position: 'bottom', labels: { color: '#888' } } } }
+        });
+    },
+
+    // 5. Evolución Patrimonio
+    renderWealthEvolutionChart() {
+        // Intentar ambos IDs por compatibilidad
+        const ctx = document.getElementById('reports-assetGrowthChart')?.getContext('2d') ||
+            document.getElementById('reports-wealthEvolutionChart')?.getContext('2d');
+        if (!ctx) return;
+
+        // Generar línea simulada si no hay histórico real
+        // Empezamos en totalLiquid actual
+        const currentTotal = this.data.totalLiquid + this.data.wealthDistribution
+            .filter(d => d.name !== 'Ahorros') // Sumar inversiones
+            .reduce((sum, d) => sum + d.amount, 0);
+
+        // Simulamos una linea plana o leve variación si no hay histórico complejo
+        const labels = ['6m', '5m', '4m', '3m', '2m', 'Actual'];
+        const data = Array(6).fill(currentTotal);
+        // Si tenemos trend de ingresos, podríamos ondularla, pero flat es seguro para v1
+
+        this.charts.wealthEvo = this.destroyChart(this.charts.wealthEvo);
+        this.charts.wealthEvo = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Patrimonio Total',
+                    data,
+                    borderColor: '#C5A058',
+                    backgroundColor: 'rgba(197, 160, 88, 0.1)',
+                    fill: true, tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: '#333' } }, y: { grid: { color: '#333' } } } }
+        });
+    },
+
+    // --- HELPER RENDERING ---
+
+    getContext(id) {
+        const el = document.getElementById(id);
+        if (!el) { console.warn(`Canvas not found: ${id}`); return null; }
+        return el.getContext('2d');
+    },
+
+    createChart(ctx, key, config) {
+        // Destroy old
+        if (this.charts[key]) {
+            this.charts[key].destroy();
+        }
+        // Create new
+        try {
+            this.charts[key] = new Chart(ctx, config);
+        } catch (e) {
+            console.error(`Error creating chart ${key}:`, e);
+        }
+    },
+
+    destroyChart(chart) {
+        if (chart && typeof chart.destroy === 'function') chart.destroy();
+        return null;
+    },
+
+    renderTopMerchants() {
+        const container = document.getElementById('reports-topMerchants');
+        if (!container) return;
+
+        const data = this.data.merchants;
+        if (data.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center">Sin datos recientes</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(m => `
+            <div class="flex justify-between items-center p-sm bg-surface rounded">
+                <div class="font-medium">${m.name}</div>
+                <div class="font-mono text-gold">${Utils.formatCurrency(m.amount)}</div>
+            </div>
+        `).join('');
+    },
+
+    renderCategoryBreakdown() {
+        const container = document.getElementById('reports-categoryBreakdown');
+        if (!container) return;
+
+        const data = this.data.categories;
+        if (data.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center">Sin gastos</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(c => `
+             <div class="flex justify-between items-center p-sm border-b border-white-5">
+                <div class="flex items-center gap-2">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${c.color}"></div>
+                    <span>${c.name}</span>
+                </div>
+                <div class="font-mono">${Utils.formatCurrency(c.amount)}</div>
+            </div>
+        `).join('');
+    },
+
+    updateKPIs(income, expenses) {
+        const savings = income - expenses;
+        const rate = income > 0 ? (savings / income) * 100 : 0;
+
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+        setVal('reports-totalIncome', `+${Utils.formatCurrency(income)}`);
+        setVal('reports-totalExpenses', `-${Utils.formatCurrency(expenses)}`);
+        setVal('reports-netSavings', `${savings >= 0 ? '+' : '-'}${Utils.formatCurrency(Math.abs(savings))}`);
+        setVal('reports-savingsRate', `${rate.toFixed(0)}%`);
+    },
+
+    // --- HELPERS UTILS ---
+
+    getCategoryName(id) {
+        const map = { food: 'Alimentación', housing: 'Vivienda', transport: 'Transporte', bills: 'Facturas', entertainment: 'Ocio', shopping: 'Compras', health: 'Salud' };
+        return map[id.toLowerCase()] || id;
+    },
+
+    getCategoryColor(id) {
+        const colors = { food: '#4ade80', housing: '#C5A058', transport: '#60a5fa', bills: '#fb923c', entertainment: '#f472b6', shopping: '#a78bfa', health: '#f87171' };
+        return colors[id.toLowerCase()] || '#94a3b8';
+    },
+
+    getAssetColor(name) {
+        const colors = { 'Ahorros': '#4ade80', 'Inversiones': '#C5A058', 'Cripto': '#818cf8', 'Inmuebles': '#fb923c' };
+        return colors[name] || '#94a3b8';
+    },
+
+    getPeriodLabel(p) {
+        const labels = { week: 'Última Semana', month: 'Último Mes', quarter: 'Último Trimestre', year: 'Último Año' };
+        return labels[p] || p;
+    },
+
+    showToast(msg) {
+        if (window.showToast) window.showToast(msg);
+        else console.log('Toast:', msg);
+    },
+
+    // --- EXPORTACIÓN (Legacy) ---
+    // Mantenemos la lógica de exportación existente pero conectada al nuevo sistema de carga
+    openExportModal() { document.getElementById('exportReportModal')?.classList.add('active'); },
+    closeExportModal() { document.getElementById('exportReportModal')?.classList.remove('active'); },
+
+    async exportData() {
+        console.log('📊 Reports: Exporting data...');
+
+        // Si no hay datos cargados, intentar cargarlos primero
+        if (!this.data.transactions || this.data.transactions.length === 0) {
+            this.showToast('Cargando datos para exportar...');
+            await this.loadData();
+        }
+
+        // Leer período del modal si está abierto
+        const periodSelect = document.getElementById('exportTimeRange') || document.getElementById('exportPeriod');
+        const exportPeriod = periodSelect ? this._mapExportPeriod(periodSelect.value) : this.period;
+
+        const transactions = this.filterTransactionsByPeriod(this.data.transactions, exportPeriod);
+
+        if (!transactions || transactions.length === 0) {
+            this.showToast('No hay datos para exportar en este período');
+            return;
+        }
+
+        // BOM para que Excel detecte UTF-8
+        const BOM = '\uFEFF';
+
+        // 1. CSV Header
+        let csvContent = BOM + "Fecha,Concepto,Categoría,Importe,Tipo\n";
+
+        // 2. CSV Rows
+        transactions.forEach(t => {
+            const locale = window.Utils?._getLocale ? Utils._getLocale() : 'es-ES';
+            const date = new Date(t.date?.toDate ? t.date.toDate() : t.date).toLocaleDateString(locale);
+            const concept = (t.description || t.merchantName || 'Sin concepto').replace(/,/g, ' ').replace(/"/g, "'");
+            const category = this.getCategoryName(t.category || 'other');
+            const amount = parseFloat(t.amount).toFixed(2);
+            const type = t.amount >= 0 ? 'Ingreso' : 'Gasto';
+
+            csvContent += `"${date}","${concept}","${category}",${amount},"${type}"\n`;
+        });
+
+        // 3. Resumen al final
+        const income = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const expenses = transactions.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        csvContent += `\n"RESUMEN","","","",""\n`;
+        csvContent += `"Total Ingresos","","",${income.toFixed(2)},""\n`;
+        csvContent += `"Total Gastos","","",${(-expenses).toFixed(2)},""\n`;
+        csvContent += `"Balance Neto","","",${(income - expenses).toFixed(2)},""\n`;
+        csvContent += `"Transacciones","","",${transactions.length},""\n`;
+
+        // 4. Create Blob and Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `reporte_gentlefinances_${exportPeriod}_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        // Cerrar modal si estaba abierto
+        this.closeExportModal();
+        this.showToast('✅ Informe exportado correctamente');
+    },
+
+    // Mapear valores del select del modal a períodos internos
+    _mapExportPeriod(val) {
+        const map = { 'all': 'year', 'month': 'month', 'quarter': 'quarter', 'half': 'quarter', 'year': 'year' };
+        return map[val] || this.period;
+    }
+};
+
+window.Reports = Reports;

@@ -1,0 +1,118 @@
+{
+    "name": "GentleFinances",
+    "short_name": "Finances",
+    "description": "Elegant personal finance management - Quiet Luxury",
+    "start_url": "./index.html",
+    "scope": "./",
+    "id": "gentlefinances",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#050505",
+    "theme_color": "#C5A058",
+    "icons": [
+        {
+            "src": "assets/icons/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "assets/logo.svg",
+            "sizes": "72x72 96x96 128x128 144x144 152x152 192x192 384x384 512x512",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "finance",
+        "productivity",
+        "lifestyle"
+    ],
+    "lang": "es",
+    "dir": "ltr",
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "screenshots": [
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "GentleFinances Dashboard"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "GentleFinances Mobile"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Nueva Transaccion",
+            "short_name": "Importar",
+            "description": "Importar transacciones bancarias",
+            "url": "./index.html#import",
+            "icons": [{"src": "assets/icons/icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "Ver Informes",
+            "short_name": "Informes",
+            "description": "Consultar informes financieros",
+            "url": "./index.html#reports",
+            "icons": [{"src": "assets/icons/icon-192.png", "sizes": "192x192"}]
+        },
+        {
+            "name": "Presupuesto",
+            "short_name": "Budget",
+            "description": "Consultar estado del presupuesto",
+            "url": "./index.html#budget",
+            "icons": [{"src": "assets/icons/icon-192.png", "sizes": "192x192"}]
+        }
+    ],
+    "share_target": {
+        "action": "./index.html",
+        "method": "GET",
+        "enctype": "application/x-www-form-urlencoded",
+        "params": {
+            "title": "title",
+            "text": "text",
+            "url": "url"
+        }
+    },
+    "handle_links": "preferred",
+    "launch_handler": {
+        "client_mode": "navigate-existing"
+    }
+}

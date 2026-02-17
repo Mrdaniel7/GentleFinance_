@@ -1,0 +1,3067 @@
+<!DOCTYPE html>
+<html lang="es" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#C5A058">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GentleFinances">
+    <meta name="description" content="GentleFinances - Gestión elegante de finanzas personales.">
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <link rel="apple-touch-icon" href="assets/icons/icon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <title>GentleFinances - Lujo Silencioso</title>
+
+    <style>
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            animation: pulse-gold 2s infinite;
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            color: var(--gold-primary);
+            letter-spacing: 0.1em;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 2px;
+            background: var(--bg-tertiary);
+            margin-top: 2rem;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: var(--gold-primary);
+            animation: loading 1.5s ease infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                width: 0%;
+                margin-left: 0;
+            }
+
+            50% {
+                width: 50%;
+                margin-left: 25%;
+            }
+
+            100% {
+                width: 0%;
+                margin-left: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <img src="assets/logo.svg" alt="GentleFinances" class="loading-logo">
+        <div class="loading-text">GENTLEFINANCES</div>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+    <!-- Auth Layout -->
+    <div id="authContainer" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <img src="assets/logo.svg" alt="GentleFinances" class="auth-logo">
+                <h1 class="auth-title">GentleFinances</h1>
+                <p class="auth-subtitle">Elegancia en tus finanzas</p>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin">Iniciar Sesión</div>
+                <div class="auth-tab" id="tabRegister">Registrarse</div>
+            </div>
+
+            <!-- Login Section -->
+            <div id="loginSection">
+                <form id="loginForm" class="auth-form">
+                    <div class="auth-form-group">
+                        <label class="auth-label" for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="auth-input" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-label" for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit" class="btn-auth-primary">Entrar</button>
+                    </div>
+                </form>
+
+                <div class="auth-divider">
+                    <span>O accede con</span>
+                </div>
+
+                <button id="googleLoginBtn" class="btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18">
+                        <path
+                            d="M17.64 9.2c0-.637-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                            fill="#4285F4" />
+                        <path
+                            d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.715H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                            fill="#34A853" />
+                        <path
+                            d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"
+                            fill="#EA4335" />
+                    </svg>
+                    Google
+                </button>
+            </div>
+
+            <!-- Register Section -->
+            <div id="registerSection" style="display: none;">
+                <form id="registerForm" class="auth-form">
+                    <div class="auth-form-group">
+                        <label class="auth-label" for="registerName">Nombre Completo</label>
+                        <input type="text" id="registerName" class="auth-input" placeholder="Tu Nombre" required>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-label" for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" class="auth-input" placeholder="tu@email.com" required>
+                    </div>
+                    <div class="auth-form-group">
+                        <label class="auth-label" for="registerPassword">Contraseña</label>
+                        <input type="password" id="registerPassword" class="auth-input"
+                            placeholder="Mínimo 6 caracteres" required minlength="6">
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit" class="btn-auth-primary">Crear Cuenta</button>
+                    </div>
+                </form>
+            </div>
+
+            <p id="authError"
+                style="color: #ff4d4d; text-align: center; margin-top: 1.5rem; display: none; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; font-size: 0.9rem;">
+            </p>
+        </div>
+    </div>
+
+    <!-- App Layout -->
+    <div class="app-container" id="appContainer" style="display: none !important;">
+        <!-- Header (Mobile) -->
+        <header class="app-header" id="appHeader">
+            <button class="btn btn-icon btn-ghost" id="mobileMenuBtn" aria-label="Abrir menú">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+            <a href="#dashboard" class="app-logo" onclick="Navigation.navigateTo('dashboard'); return false;">
+                <img src="assets/logo.svg" alt="GentleFinances" class="app-logo-icon">
+                <span class="app-logo-text">GentleFinances</span>
+            </a>
+            <div style="width: 44px;"></div> <!-- Spacer for symmetry -->
+        </header>
+
+        <!-- Mobile Drawer Overlay -->
+        <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="closeMobileDrawer()"></div>
+
+        <!-- Mobile Drawer -->
+        <nav class="mobile-drawer" id="mobileDrawer">
+            <div class="mobile-drawer-header">
+                <img src="assets/logo.svg" alt="GentleFinances" class="mobile-drawer-logo">
+                <span class="mobile-drawer-title">GentleFinances</span>
+                <button class="btn btn-icon btn-ghost" onclick="closeMobileDrawer()" aria-label="Cerrar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mobile-drawer-nav">
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('dashboard'); closeMobileDrawer(); return false;"
+                    data-page="dashboard">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    <span data-i18n="nav_dashboard">Inicio</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('transactions'); closeMobileDrawer(); return false;"
+                    data-page="transactions">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="8" y1="6" x2="21" y2="6" />
+                        <line x1="8" y1="12" x2="21" y2="12" />
+                        <line x1="8" y1="18" x2="21" y2="18" />
+                    </svg>
+                    <span data-i18n="nav_transactions">Movimientos</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('goals'); closeMobileDrawer(); return false;" data-page="goals">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    <span data-i18n="nav_goals">Metas</span>
+                </a>
+
+                <div class="mobile-drawer-divider"></div>
+
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('subscriptions'); closeMobileDrawer(); return false;"
+                    data-page="subscriptions">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                    </svg>
+                    <span data-i18n="nav_subscriptions">Suscripciones</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="toggleMobileSubmenu('mobilePortfolioSubmenu'); return false;" data-page="portfolio">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8" />
+                        <path d="M12 17v4" />
+                    </svg>
+                    <span data-i18n="nav_portfolio">Portfolio</span>
+                    <span class="drawer-arrow" style="margin-left: auto; transition: transform 0.2s;">▾</span>
+                </a>
+
+                <!-- Submenu Mobile (Reutilizando estilos de sidebar.js si posible, o inline por seguridad) -->
+                <div id="mobilePortfolioSubmenu" class="sidebar-submenu" style="background: rgba(255,255,255,0.03);">
+                    <a href="#" onclick="Navigation.navigateTo('portfolio'); closeMobileDrawer(); return false;"
+                        class="sidebar-subitem">
+                        <span>Ver Todo</span>
+                    </a>
+                    <a href="#" onclick="Navigation.navigateTo('investments'); closeMobileDrawer(); return false;"
+                        class="sidebar-subitem">
+                        <span>Acciones</span>
+                    </a>
+                    <a href="#" onclick="Navigation.navigateTo('crypto'); closeMobileDrawer(); return false;"
+                        class="sidebar-subitem">
+                        <span>Crypto</span>
+                    </a>
+                    <a href="#" onclick="Navigation.navigateTo('realestate'); closeMobileDrawer(); return false;"
+                        class="sidebar-subitem">
+                        <span>Inmobiliario</span>
+                    </a>
+                </div>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('reports'); closeMobileDrawer(); return false;" data-page="reports">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M18 20V10" />
+                        <path d="M12 20V4" />
+                        <path d="M6 20v-6" />
+                    </svg>
+                    <span data-i18n="nav_reports">Informes</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('import'); closeMobileDrawer(); return false;" data-page="import">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17,8 12,3 7,8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span data-i18n="nav_import">Importar</span>
+                </a>
+
+                <div class="mobile-drawer-divider"></div>
+
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('settings'); closeMobileDrawer(); return false;"
+                    data-page="settings">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+                    </svg>
+                    <span data-i18n="nav_settings">Ajustes</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('security'); closeMobileDrawer(); return false;"
+                    data-page="security">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                    <span data-i18n="nav_security">Seguridad</span>
+                </a>
+                <a href="#" class="mobile-drawer-item"
+                    onclick="Navigation.navigateTo('help'); closeMobileDrawer(); return false;" data-page="help">
+                    <svg class="drawer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span data-i18n="nav_help">Ayuda</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Sidebar (Container for dynamic sidebar) -->
+        <aside class="sidebar" id="sidebar">
+            <a href="index.html" class="sidebar-logo">
+                <img src="assets/logo.svg" alt="GentleFinances" class="sidebar-logo-icon">
+                <span class="sidebar-logo-text">GentleFinances</span>
+            </a>
+            <div id="sidebar-container"></div>
+            <!-- Dynamic Sidebar will be injected here if not using sidebar.js logic directly on 'sidebar' -->
+            <!-- Note: existing sidebar code in index.html was static. We want to use js/sidebar.js. 
+                 However, js/sidebar.js injects into .sidebar-nav? 
+                 Let's keep the static structure for now and let sidebar.js enhance/replace it or manually update active states via navigation.js -->
+
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-item active" onclick="Navigation.navigateTo('dashboard'); return false;"
+                    data-page="dashboard">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline points="9,22 9,12 15,12 15,22" />
+                    </svg>
+                    <span>Resumen</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('transactions'); return false;"
+                    data-page="transactions">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <line x1="8" y1="6" x2="21" y2="6" />
+                        <line x1="8" y1="12" x2="21" y2="12" />
+                        <line x1="8" y1="18" x2="21" y2="18" />
+                    </svg>
+                    <span>Transacciones</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('budget'); return false;"
+                    data-page="budget">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <line x1="3" y1="9" x2="21" y2="9" />
+                    </svg>
+                    <span>Presupuesto</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('goals'); return false;"
+                    data-page="goals">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    <span>Metas</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('subscriptions'); return false;"
+                    data-page="subscriptions">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span>Suscripciones</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="GFSidebar.toggleSubmenu('portfolio'); return false;"
+                    data-page="portfolio">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8" />
+                        <path d="M12 17v4" />
+                        <polyline points="17,9 12,14 9,11 6,14" />
+                    </svg>
+                    <span>Mi Portfolio</span>
+                    <span class="sidebar-arrow">▾</span>
+                </a>
+                <div class="sidebar-submenu" id="portfolioSubmenu">
+                    <a href="#" onclick="Navigation.navigateTo('portfolio'); return false;" class="sidebar-subitem">💼
+                        Mi Portfolio</a>
+                    <a href="#" onclick="Navigation.navigateTo('investments'); return false;" class="sidebar-subitem">📈
+                        Acciones</a>
+                    <a href="#" onclick="Navigation.navigateTo('crypto'); return false;" class="sidebar-subitem">₿
+                        Crypto</a>
+                    <a href="#" onclick="Navigation.navigateTo('realestate'); return false;" class="sidebar-subitem">🏠
+                        Inmobiliario</a>
+                </div>
+                <div style="margin: var(--space-md) 0; border-top: 1px solid var(--border-subtle);"></div>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('import'); return false;"
+                    data-page="import">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17,8 12,3 7,8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span>Importar</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('reports'); return false;"
+                    data-page="reports">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M18 20V10" />
+                        <path d="M12 20V4" />
+                        <path d="M6 20v-6" />
+                    </svg>
+                    <span>Informes</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('settings'); return false;"
+                    data-page="settings">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+                    </svg>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('security'); return false;"
+                    data-page="security">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                    <span>Seguridad</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="Navigation.navigateTo('help'); return false;"
+                    data-page="help">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span>Ayuda</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="card" style="padding: var(--space-md);">
+                    <div class="text-muted" style="font-size: var(--text-xs);">ÚLTIMA SINCRONIZACIÓN</div>
+                    <div class="text-secondary" style="font-size: var(--text-sm);" id="lastSync">Hace 5 minutos</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view-section active">
+                <!-- Header / Greeting -->
+                <div class="dashboard-header mb-lg fade-in-up">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h1 class="text-gold-gradient" style="font-size: var(--text-3xl); letter-spacing: -0.02em;" data-i18n="nav_dashboard">
+                                Resumen</h1>
+                            <p class="text-secondary mt-xs" style="font-size: var(--text-lg); font-weight: 300;">
+                                Bienvenido de nuevo, <span id="userName" class="text-primary font-medium">Usuario</span>
+                            </p>
+                        </div>
+                        <div class="hidden-mobile">
+                            <span class="text-muted text-sm currentDate">Hoy, 14 Feb</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Section: Net Worth -->
+                <!-- Hero Section: Net Worth -->
+                <div class="hero-card glass-panel fade-in-up"
+                    style="animation-delay: 0.1s; margin-bottom: var(--space-2xl);">
+
+                    <!-- Content Layer (Text) -->
+                    <div class="hero-content flex justify-between items-start mb-md">
+                        <div class="flex flex-col gap-xs">
+                            <span class="text-secondary text-sm uppercase tracking-wider" data-i18n="dash_net_worth_label">Patrimonio Neto</span>
+                            <div class="amount-hero text-gold-gradient" id="netWorthValue">€0.00</div>
+                            <div class="badge badge-positive flex items-center gap-xs w-max">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                </svg>
+                                <span id="netWorthChange">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Timeframe Controls (Floating Top Right) -->
+                        <div class="chart-controls">
+                            <button class="btn-chart-timeframe active"
+                                onclick="Dashboard.updateChartTimeframe('1M')">1M</button>
+                            <button class="btn-chart-timeframe"
+                                onclick="Dashboard.updateChartTimeframe('3M')">3M</button>
+                            <button class="btn-chart-timeframe"
+                                onclick="Dashboard.updateChartTimeframe('6M')">6M</button>
+                            <button class="btn-chart-timeframe"
+                                onclick="Dashboard.updateChartTimeframe('1Y')">1Y</button>
+                        </div>
+                    </div>
+
+                    <!-- Chart Layer (Background) -->
+                    <div class="hero-chart-container">
+                        <canvas id="netWorthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-3 gap-md fade-in-up"
+                    style="animation-delay: 0.2s; margin-bottom: var(--space-2xl);">
+                    <!-- Income -->
+                    <div class="widget glass-card">
+                        <div class="widget-icon bg-positive-subtle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--positive)"
+                                stroke-width="1.5">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-secondary text-xs uppercase tracking-wide" data-i18n="dash_income">Ingresos</span>
+                            <div class="text-xl font-medium mt-xs text-primary" id="dashboardIncome">€0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Expenses -->
+                    <div class="widget glass-card">
+                        <div class="widget-icon bg-negative-subtle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--negative)"
+                                stroke-width="1.5">
+                                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                                <polyline points="17 18 23 18 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-secondary text-xs uppercase tracking-wide" data-i18n="dash_expenses">Gastos</span>
+                            <div class="text-xl font-medium mt-xs text-primary" id="dashboardExpense">€0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Available -->
+                    <div class="widget glass-card">
+                        <div class="widget-icon bg-gold-subtle">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)"
+                                stroke-width="1.5">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-secondary text-xs uppercase tracking-wide" data-i18n="dash_available">Disponible</span>
+                            <div class="text-xl font-medium mt-xs text-gold" id="availableBalance">€0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <section class="fade-in-up" style="animation-delay: 0.3s;">
+                    <div class="flex justify-between items-center mb-md">
+                        <h2 class="text-xl font-serif" data-i18n="dash_recent_activity">Actividad Reciente</h2>
+                        <button class="btn btn-ghost btn-sm text-gold hover:text-white"
+                            onclick="Navigation.navigateTo('transactions')" data-i18n="dash_view_all">Ver Todo →</button>
+                    </div>
+
+                    <div class="glass-panel p-0 overflow-hidden">
+                        <div class="transaction-list" id="recentTransactionsList">
+                            <!-- Dynamic Content -->
+                            <div class="p-lg text-center text-muted">Cargando movimientos...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: TRANSACTIONS -->
+            <div id="view-transactions" class="view-section" style="display: none;">
+                <div class="card" style="margin-bottom: var(--space-md);">
+                    <div class="flex gap-md items-center" style="flex-wrap: wrap;">
+                        <div class="input-group" style="flex: 1; min-width: 200px;">
+                            <div class="flex items-center gap-sm">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)"
+                                    stroke-width="1.5">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                <input type="text" id="allTransactionSearch" class="input"
+                                    placeholder="Buscar transacción...">
+                            </div>
+                        </div>
+                        <select id="allTransactionCategoryFilter" class="input input-filled" style="width: auto;">
+                            <option value="">Todas las categorías</option>
+                            <option value="food">🍽️ Alimentación</option>
+                            <option value="transport">🚗 Transporte</option>
+                            <option value="entertainment">🎬 Ocio</option>
+                            <option value="subscriptions">📺 Suscripciones</option>
+                            <option value="income">💼 Ingresos</option>
+                        </select>
+                        <button class="btn btn-secondary btn-sm" onclick="Transactions.downloadCSV()">Exportar</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-3 gap-md" style="margin-bottom: var(--space-lg);">
+                    <div class="card">
+                        <div class="widget-title">Ingresos</div>
+                        <div class="widget-value" style="color: var(--positive-light);" id="summary-income">+€0.00</div>
+                    </div>
+                    <div class="card">
+                        <div class="widget-title">Gastos</div>
+                        <div class="widget-value" id="summary-expenses">-€0.00</div>
+                    </div>
+                    <div class="card">
+                        <div class="widget-title">Neto</div>
+                        <div class="widget-value gold" id="summary-net">€0.00</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Todas las Transacciones</h2><span class="text-muted text-sm">Enero
+                            2026</span>
+                    </div>
+                    <div class="transaction-list" id="allTransactionsList">
+                        <!-- Dynamic content via Transactions.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: BUDGET -->
+            <div id="view-budget" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center mb-lg wrap gap-md">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">Presupuesto</h1>
+                        <p class="text-secondary">Gestiona tu dinero con el método Zero-Based</p>
+                    </div>
+                    <div class="flex items-center gap-md">
+                        <div class="flex items-center gap-sm">
+                            <button class="btn btn-icon btn-ghost" onclick="Budget.prevMonth()">←</button>
+                            <span
+                                style="font-size: var(--text-lg); font-weight: var(--font-medium); min-width: 150px; text-align: center;"
+                                id="currentMonth">Febrero 2026</span>
+                            <button class="btn btn-icon btn-ghost" onclick="Budget.nextMonth()">→</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-4 gap-md mb-lg">
+                    <div class="card text-center">
+                        <div class="text-gold"
+                            style="font-size: var(--text-xl); font-weight: bold; font-family: var(--font-mono);"
+                            id="budget-totalIncome">€2,850</div>
+                        <div class="text-muted text-sm mt-xs">Ingresos</div>
+                    </div>
+                    <div class="card text-center">
+                        <div style="font-size: var(--text-xl); font-weight: bold; font-family: var(--font-mono);"
+                            id="budget-totalBudgeted">€2,650</div>
+                        <div class="text-muted text-sm mt-xs">Presupuestado</div>
+                    </div>
+                    <div class="card text-center">
+                        <div style="font-size: var(--text-xl); font-weight: bold; font-family: var(--font-mono);"
+                            id="budget-totalSpent">€1,245</div>
+                        <div class="text-muted text-sm mt-xs">Gastado</div>
+                    </div>
+                    <div class="card text-center">
+                        <div style="font-size: var(--text-xl); font-weight: bold; font-family: var(--font-mono); color: var(--positive-light);"
+                            id="budget-available">€200</div>
+                        <div class="text-muted text-sm mt-xs">Disponible</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-3 gap-lg">
+                    <!-- Categories List -->
+                    <div class="card" style="grid-column: span 2;">
+                        <div class="flex justify-between items-center mb-md">
+                            <div class="card-title">Categorías</div>
+                            <button class="btn btn-ghost btn-sm" onclick="Budget.showTemplates()">📋 Plantillas</button>
+                        </div>
+
+                        <div class="flex flex-col gap-sm" id="budget-categoryList">
+                            <!-- Filled by JS -->
+                        </div>
+
+                        <button class="btn btn-ghost mt-md w-full" onclick="Budget.addCategory()"
+                            style="border: 2px dashed var(--border-subtle);">
+                            <span>+</span> Añadir categoría
+                        </button>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="flex flex-col gap-md">
+                        <!-- Spending Chart -->
+                        <div class="card">
+                            <div class="card-title mb-md">📊 Distribución</div>
+                            <div style="height: 250px;">
+                                <canvas id="budget-spendingChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Quick Templates -->
+                        <div class="card">
+                            <div class="card-title mb-sm">💡 Plantillas Rápidas</div>
+                            <p class="text-muted mb-md" style="font-size: var(--text-sm);">Aplica una distribución
+                                predefinida</p>
+                            <div class="grid grid-2 gap-md">
+                                <!-- Adjusted grid for cleaner look in side column -->
+                                <div class="card"
+                                    style="padding: var(--space-sm); cursor: pointer; text-align: center; border: 1px solid var(--border-subtle);"
+                                    onclick="Budget.applyTemplate('50-30-20')">
+                                    <div style="font-weight: 500;">50/30/20</div>
+                                    <div class="text-xs text-muted">Estándar</div>
+                                </div>
+                                <div class="card"
+                                    style="padding: var(--space-sm); cursor: pointer; text-align: center; border: 1px solid var(--border-subtle);"
+                                    onclick="Budget.applyTemplate('70-20-10')">
+                                    <div style="font-weight: 500;">70/20/10</div>
+                                    <div class="text-xs text-muted">Ahorrador</div>
+                                </div>
+                                <div class="card"
+                                    style="padding: var(--space-sm); cursor: pointer; text-align: center; border: 1px solid var(--border-subtle);"
+                                    onclick="Budget.applyTemplate('80-20')">
+                                    <div style="font-weight: 500;">80/20</div>
+                                    <div class="text-xs text-muted">Simple</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: GOALS -->
+            <div id="view-goals" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center wrap gap-md" style="margin-bottom: var(--space-lg);">
+                    <div>
+                        <h1 style="font-size: var(--text-2xl);">Tus Metas</h1>
+                        <p class="text-secondary">Ahorro y planificación a largo plazo</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="Goals.add()">+ Nueva Meta</button>
+                </div>
+
+                <!-- Goals Summary -->
+                <div class="grid grid-3 gap-md" style="margin-bottom: var(--space-xl);">
+                    <div class="card">
+                        <div class="widget-title">Total Ahorrado</div>
+                        <div class="widget-value gold" id="totalSaved">€0</div>
+                    </div>
+                    <div class="card">
+                        <div class="widget-title">Meta Total</div>
+                        <div class="widget-value" id="totalTarget">€0</div>
+                    </div>
+                    <div class="card">
+                        <div class="widget-title">Progreso Global</div>
+                        <div class="widget-value" id="avgProgress">0%</div>
+                    </div>
+                </div>
+
+                <!-- Goals List (Dynamic) -->
+                <h2 style="font-size: var(--text-xl); margin-bottom: var(--space-md);">Metas de Ahorro</h2>
+                <div class="grid gap-md" id="goalsGrid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                    <!-- Filled by Goals.js -->
+                </div>
+
+                <!-- Debt Payoff Section Removed -->
+            </div>
+
+            <!-- VIEW: PORTFOLIO -->
+            <div id="view-portfolio" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center mb-lg wrap gap-md">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">Mi Portfolio</h1>
+                        <p class="text-secondary">Gestiona tus inversiones</p>
+                    </div>
+                </div>
+
+                <!-- Market Navigation -->
+                <div class="card mb-lg" style="padding: var(--space-md);">
+                    <div class="text-muted text-xs mb-sm" style="text-transform: uppercase; letter-spacing: 0.1em;">
+                        Explorar Mercados</div>
+                    <div class="flex gap-md wrap">
+                        <a href="#" onclick="Navigation.navigateTo('investments'); return false;"
+                            class="btn btn-outline flex items-center gap-sm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <polyline points="22,7 13.5,15.5 8.5,10.5 2,17" />
+                                <polyline points="16,7 22,7 22,13" />
+                            </svg>
+                            Acciones
+                        </a>
+                        <a href="#" onclick="Navigation.navigateTo('crypto'); return false;"
+                            class="btn btn-outline flex items-center gap-sm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.5 8h5.5a2 2 0 110 4h-5.5" />
+                                <path d="M9 12h5a2 2 0 110 4H9" />
+                            </svg>
+                            Crypto
+                        </a>
+                        <a href="#" onclick="Navigation.navigateTo('realestate'); return false;"
+                            class="btn btn-outline flex items-center gap-sm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                <polyline points="9,22 9,12 15,12 15,22" />
+                            </svg>
+                            Inmobiliario
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Portfolio Header -->
+                <div class="flex flex-col md:flex-row gap-lg mb-xl">
+                    <!-- Total Value Card -->
+                    <div class="card flex-1">
+                        <div class="widget-title">Valor Total del Portfolio</div>
+                        <div class="text-3xl font-bold font-serif text-gold" id="portfolio-totalValue">€0.00</div>
+                        <div class="text-lg mt-sm" id="portfolio-totalChange">
+                            <span class="text-muted">Sin inversiones</span>
+                        </div>
+                        <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-md);">
+                            <div>
+                                <div class="text-muted text-xs">INVERTIDO</div>
+                                <div id="portfolio-totalInvested" class="font-semibold">€0.00</div>
+                            </div>
+                            <div>
+                                <div class="text-muted text-xs">BENEFICIO</div>
+                                <div id="portfolio-totalProfit" class="font-semibold">€0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Distribution Chart -->
+                    <div class="card" style="width: 100%; max-width: 400px;">
+                        <div class="widget-title">Distribución</div>
+                        <div style="width: 280px; height: 280px; margin: 0 auto; position: relative;">
+                            <canvas id="portfolio-distributionChart"></canvas>
+                        </div>
+                        <div id="portfolio-chartLegend" style="margin-top: var(--space-md);"></div>
+                    </div>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="flex gap-sm mb-lg wrap" id="portfolio-categoryTabs">
+                    <button class="btn btn-sm btn-outline active" data-category="all">Todo</button>
+                    <button class="btn btn-sm btn-outline" data-category="stocks">📈 Acciones</button>
+                    <button class="btn btn-sm btn-outline" data-category="crypto">₿ Crypto</button>
+                    <button class="btn btn-sm btn-outline" data-category="indices">📊 Índices</button>
+                    <button class="btn btn-sm btn-outline" data-category="realestate">🏠 Inmobiliario</button>
+                </div>
+
+                <!-- Positions Grid -->
+                <div id="portfolio-positionsContainer">
+                    <div class="text-center py-3xl" id="portfolio-emptyState">
+                        <div style="font-size: 4rem; margin-bottom: var(--space-lg);">📊</div>
+                        <h3>No tienes inversiones</h3>
+                        <p class="text-muted">Explora los mercados y añade inversiones ficticias a tu portfolio</p>
+                        <div class="flex gap-md justify-center mt-lg">
+                            <a href="#" onclick="Navigation.navigateTo('investments'); return false;"
+                                class="btn btn-secondary">Ver Acciones</a>
+                            <a href="#" onclick="Navigation.navigateTo('crypto'); return false;"
+                                class="btn btn-secondary">Ver
+                                Crypto</a>
+                        </div>
+                    </div>
+                    <div class="grid grid-auto-fit gap-md" id="portfolio-positionsGrid" style="--min-col-width: 320px;">
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="card mt-xl">
+                    <div class="card-header">
+                        <span class="card-title">Historial de Transacciones</span>
+                    </div>
+                    <div id="portfolio-transactionHistory" class="flex flex-col gap-sm"></div>
+                </div>
+            </div>
+
+            <!-- VIEW: INVESTMENTS -->
+            <div id="view-investments" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center mb-lg wrap gap-md">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">Inversiones</h1>
+                        <p class="text-secondary">Mercados financieros en tiempo real</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-lg">
+                    <!-- Left Panel: Search & Watchlist -->
+                    <div class="flex flex-col gap-md">
+                        <!-- Search -->
+                        <div class="card">
+                            <div class="relative">
+                                <input type="text" id="investments-stockSearch" class="input"
+                                    placeholder="Buscar acciones, ETFs...">
+                                <div class="absolute top-[100%] left-0 right-0 bg-secondary border border-subtle rounded-md max-h-[300px] overflow-y-auto z-10 hidden"
+                                    id="investments-searchResults"></div>
+                            </div>
+                        </div>
+
+                        <!-- Market Indices -->
+                        <div class="card">
+                            <div class="card-title mb-md">Índices de Mercado</div>
+                            <div class="flex flex-col gap-sm" id="investments-indicesList">
+                                <div class="text-muted">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- Watchlist -->
+                        <div class="card">
+                            <div class="flex justify-between items-center mb-md">
+                                <div class="card-title">Mi Watchlist</div>
+                            </div>
+                            <div id="investments-watchlist" class="flex flex-col gap-sm">
+                                <div class="text-center py-xl text-muted">
+                                    <div class="text-3xl mb-sm">⭐</div>
+                                    <p>Busca y añade activos a tu watchlist</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Stock Details -->
+                    <div class="flex flex-col gap-md">
+                        <!-- Top Movers (Default View) -->
+                        <div class="card" id="investments-topMoversCard">
+                            <div class="card-title mb-lg">🔥 Top Movers</div>
+                            <div class="grid grid-2 gap-md">
+                                <div>
+                                    <h3 class="text-positive mb-md">Top Gainers</h3>
+                                    <div id="investments-topGainers" class="flex flex-col gap-sm"></div>
+                                </div>
+                                <div>
+                                    <h3 class="text-negative mb-md">Top Losers</h3>
+                                    <div id="investments-topLosers" class="flex flex-col gap-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock Detail Card (Hidden by default) -->
+                        <div class="card hidden" id="investments-stockDetailCard" style="display: none;">
+                            <div class="flex justify-between items-center mb-md">
+                                <button class="btn btn-ghost text-muted hover:text-white" id="investments-backBtn">
+                                    <i class="fas fa-arrow-left mr-xs"></i> Volver
+                                </button>
+                            </div>
+                            <div class="flex justify-between items-start mb-lg">
+                                <div>
+                                    <h2 class="font-serif text-2xl text-gold" id="investments-stockName">Apple Inc.</h2>
+                                    <span class="text-sm text-muted" id="investments-stockSymbol">NASDAQ: AAPL</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-3xl font-bold font-mono" id="investments-stockPrice"></div>
+                                    <div class="flex items-center justify-end gap-xs mt-xs">
+                                        <span id="investments-stockChange" class="px-sm py-xs rounded text-sm">
+                                            <span id="investments-stockChangeText"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chart -->
+                            <div class="chart-container" style="height: 300px; margin: var(--space-lg) 0;">
+                                <div class="flex gap-sm mb-md justify-end"
+                                    style="display: flex; gap: 8px; margin-bottom: 12px; justify-content: flex-end;">
+                                    <button class="btn btn-xs btn-outline active chart-btn" data-range="1d">1D</button>
+                                    <button class="btn btn-xs btn-outline chart-btn" data-range="5d">5D</button>
+                                    <button class="btn btn-xs btn-outline chart-btn" data-range="1mo">1M</button>
+                                    <button class="btn btn-xs btn-outline chart-btn" data-range="3mo">3M</button>
+                                    <button class="btn btn-xs btn-outline chart-btn" data-range="1y">1Y</button>
+                                </div>
+                                <canvas id="investments-priceChart" style="max-height: 250px;"></canvas>
+                            </div>
+
+                            <!-- Fundamentals -->
+                            <div class="grid grid-2 md:grid-4 gap-md mt-xl" id="investments-fundamentalsGrid"></div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex gap-md mt-xl justify-end border-t border-subtle pt-lg">
+                                <button class="btn btn-secondary" onclick="addToWatchlist(currentSymbol)">+
+                                    Watchlist</button>
+                                <button class="btn btn-primary" onclick="investInStock()">Comprar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CRYPTO -->
+            <!-- VIEW: CRYPTO -->
+            <div id="view-crypto" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center mb-lg">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">Criptomonedas</h1>
+                        <p class="text-secondary">Mercado crypto en tiempo real</p>
+                    </div>
+                    <div class="search-container" style="width: 300px;">
+                        <input type="text" id="crypto-search" class="input" placeholder="Buscar cripto...">
+                        <div class="search-results absolute w-full z-10 hidden" id="crypto-searchResults"></div>
+                    </div>
+                </div>
+
+                <!-- Global Stats -->
+                <div class="global-stats mb-lg" id="crypto-globalStats">
+                    <div class="global-stat">
+                        <div class="global-stat-value" id="crypto-totalMarketCap">-</div>
+                        <div class="global-stat-label">Market Cap Total</div>
+                    </div>
+                    <div class="global-stat">
+                        <div class="global-stat-value" id="crypto-totalVolume">-</div>
+                        <div class="global-stat-label">Volumen 24h</div>
+                    </div>
+                    <div class="global-stat">
+                        <div class="global-stat-value" id="crypto-btcDominance">-</div>
+                        <div class="global-stat-label">Dominancia BTC</div>
+                    </div>
+                    <div class="global-stat">
+                        <div class="global-stat-value" id="crypto-marketChange">-</div>
+                        <div class="global-stat-label">Cambio 24h</div>
+                    </div>
+                </div>
+
+                <div class="crypto-grid">
+                    <!-- Main Table -->
+                    <div class="card">
+                        <div class="card-title mb-md">Top 100 Criptomonedas</div>
+                        <div style="overflow-x: auto;">
+                            <table class="crypto-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Moneda</th>
+                                        <th>Precio</th>
+                                        <th>24h</th>
+                                        <th>7d</th>
+                                        <th>Market Cap</th>
+                                        <th>7d Chart</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="crypto-tableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Cargando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div>
+                        <!-- Trending -->
+                        <div class="card mb-md">
+                            <div class="card-title mb-md">🔥 Trending</div>
+                            <div id="crypto-trendingList">
+                                <div class="text-muted text-center">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- My Holdings -->
+                        <div class="card">
+                            <div class="card-title mb-md">💰 Mis Holdings</div>
+                            <div id="crypto-holdingsList">
+                                <div class="empty-state">
+                                    <div style="font-size: 2rem; margin-bottom: var(--space-sm);">₿</div>
+                                    <p class="text-muted">Añade tus crypto holdings desde Configuración</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crypto Modal -->
+            <div class="detail-modal" id="crypto-coinModal" style="display: none;">
+                <div class="detail-content">
+                    <div class="detail-header">
+                        <div class="flex items-center gap-md">
+                            <img id="crypto-modalCoinIcon" class="crypto-icon" src="" alt="">
+                            <div>
+                                <h2 id="crypto-modalCoinName" style="font-size: var(--text-xl);">Bitcoin</h2>
+                                <span id="crypto-modalCoinSymbol" class="crypto-symbol">BTC</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-ghost btn-icon" onclick="CryptoView.closeModal()">✕</button>
+                    </div>
+                    <div class="detail-body">
+                        <div class="flex justify-between items-center mb-lg">
+                            <div>
+                                <div id="crypto-modalPrice"
+                                    style="font-size: var(--text-3xl); font-weight: var(--font-bold);">
+                                    €0.00</div>
+                                <div id="crypto-modalChange" class="text-positive">+0.00%</div>
+                            </div>
+                            <div class="chart-controls">
+                                <button class="chart-btn" data-days="1">24h</button>
+                                <button class="chart-btn active" data-days="7">7D</button>
+                                <button class="chart-btn" data-days="30">30D</button>
+                                <button class="chart-btn" data-days="90">90D</button>
+                                <button class="chart-btn" data-days="365">1A</button>
+                                <button class="chart-btn" data-days="1825">MAX</button>
+                            </div>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="crypto-coinChart"></canvas>
+                        </div>
+                        <div class="fundamentals-grid mt-lg" id="crypto-coinStats"></div>
+                        <div
+                            style="margin-top: var(--space-lg); padding-top: var(--space-lg); border-top: 1px solid var(--border-subtle);">
+                            <button class="btn btn-primary" id="crypto-investBtn" style="width: 100%;"
+                                onclick="CryptoView.investInCrypto()">
+                                💼 Añadir a Mi Portfolio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: REALESTATE -->
+            <!-- VIEW: REALESTATE -->
+            <div id="view-realestate" class="view-section" style="display: none;">
+                <div class="mb-lg">
+                    <h1 class="text-gold" style="font-size: var(--text-2xl);">🏠 Mercado Inmobiliario España</h1>
+                    <p class="text-secondary">Precios de vivienda por comunidad autónoma • Datos: INE / Ministerio de
+                        Vivienda</p>
+                </div>
+
+                <!-- National Stats -->
+                <div class="stats-row" id="realestate-nationalStats">
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="realestate-avgSalePrice">-</div>
+                        <div class="stat-card-label">Precio Medio Venta (€/m²)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="realestate-avgRentPrice">-</div>
+                        <div class="stat-card-label">Precio Medio Alquiler (€/m²)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="realestate-priceChange">-</div>
+                        <div class="stat-card-label">Variación Anual</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value" id="realestate-mostExpensive">-</div>
+                        <div class="stat-card-label">CCAA Más Cara</div>
+                    </div>
+                </div>
+
+                <!-- Mapa Interactivo de España -->
+                <div class="card mb-lg">
+                    <div class="flex justify-between items-center mb-md">
+                        <div class="card-title">🗺️ Mapa de Precios por Comunidad</div>
+                        <button class="btn btn-primary btn-sm" onclick="RealEstateView.openInvestRealEstate()">
+                            🏠 Añadir Propiedad Ficticia
+                        </button>
+                    </div>
+                    <div id="realestate-mapContainer" style="height: 520px; overflow: hidden;"></div>
+                </div>
+
+                <div class="realestate-grid" id="realestate-pricesTable">
+                    <!-- Main Table -->
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-md">
+                            <div class="card-title">Precios por Comunidad Autónoma</div>
+                            <div class="filter-tabs">
+                                <button class="filter-tab active" data-sort="price">Precio</button>
+                                <button class="filter-tab" data-sort="change">Variación</button>
+                                <button class="filter-tab" data-sort="name">Nombre</button>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="community-table">
+                                <thead>
+                                    <tr>
+                                        <th>Comunidad</th>
+                                        <th>Venta (€/m²)</th>
+                                        <th>Alquiler (€/m²)</th>
+                                        <th>Var. Anual</th>
+                                        <th>Indicador</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="realestate-tableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-muted text-center">Cargando...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div>
+                        <!-- Top 5 Most Expensive -->
+                        <div class="card mb-md">
+                            <div class="card-title mb-md">🔥 Más Caras</div>
+                            <div id="realestate-topExpensive">
+                                <div class="text-muted text-center">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- Top 5 Most Affordable -->
+                        <div class="card mb-md">
+                            <div class="card-title mb-md">💰 Más Asequibles</div>
+                            <div id="realestate-topAffordable">
+                                <div class="text-muted text-center">Cargando...</div>
+                            </div>
+                        </div>
+
+                        <!-- Historical Chart -->
+                        <div class="card">
+                            <div class="card-title">📈 Evolución Histórica</div>
+                            <div class="chart-container">
+                                <canvas id="realestate-historyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SUBSCRIPTIONS -->
+            <div id="view-subscriptions" class="view-section" style="display: none;">
+                <div class="flex justify-between items-center mb-lg wrap gap-md">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">📅 Suscripciones</h1>
+                        <p class="text-secondary">Gestiona tus pagos recurrentes</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="Subscriptions.add()">+ Añadir Suscripción</button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-4 gap-md" style="margin-bottom: var(--space-xl);">
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" id="subs-monthlyTotal">€89.93</div>
+                        <div class="text-muted text-sm mt-xs">Gasto Mensual</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" id="subs-yearlyTotal">€1,079.16</div>
+                        <div class="text-muted text-sm mt-xs">Coste Anual</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" id="subs-activeCount">7</div>
+                        <div class="text-muted text-sm mt-xs">Suscripciones Activas</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono text-gold" id="subs-nextPayment">3 Feb</div>
+                        <div class="text-muted text-sm mt-xs">Próximo Pago</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-3 gap-lg">
+                    <!-- Subscription List -->
+                    <div class="card" style="grid-column: span 2;">
+                        <div class="flex justify-between items-center mb-md">
+                            <div class="card-title">Mis Suscripciones</div>
+                            <select class="input input-filled" style="width: auto;">
+                                <option value="all">Todas</option>
+                                <option value="active">Activas</option>
+                                <option value="paused">Pausadas</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col gap-sm" id="subs-subscriptionList">
+                            <!-- Filled by JS -->
+                        </div>
+
+                    </div>
+
+                    <!-- Sidebar: Upcoming & Insights -->
+                    <div class="flex flex-col gap-md">
+                        <!-- Upcoming Payments -->
+                        <div class="card">
+                            <div class="card-title mb-md">📆 Próximos Cargos</div>
+                            <div class="flex flex-col gap-sm" id="subs-upcomingList">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Insights -->
+                        <div class="card">
+                            <div class="card-title mb-md">💡 Insights</div>
+                            <div class="text-muted text-sm">
+                                <p class="mb-md">💸 Gastas <strong class="text-gold">€89.93/mes</strong> en
+                                    suscripciones,
+                                    que representa el <strong>3.2%</strong> de tus ingresos.</p>
+                                <p class="mb-md">🔍 <strong>Netflix</strong> es tu suscripción más cara.</p>
+                                <p>⏰ Tu próximo cargo es <strong>Spotify</strong> en 3 días.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: REPORTS -->
+            <div id="view-reports" class="view-section" style="display: none;">
+                <div class="reports-header"
+                    style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md);">
+                    <div>
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">📊 Informes</h1>
+                        <p class="text-secondary">Analiza tus finanzas en detalle</p>
+                    </div>
+                    <div style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;">
+                        <div class="period-selector">
+                            <button class="period-btn" onclick="Reports.setPeriod('week')">Semana</button>
+                            <button class="period-btn active" onclick="Reports.setPeriod('month')">Mes</button>
+                            <button class="period-btn" onclick="Reports.setPeriod('quarter')">Trimestre</button>
+                            <button class="period-btn" onclick="Reports.setPeriod('year')">Año</button>
+                        </div>
+                        <button class="btn btn-secondary" onclick="Reports.exportData()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Exportar Informe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-4 gap-md mb-lg">
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" style="color: var(--positive-light);"
+                            id="reports-totalIncome">
+                            +€2,850</div>
+                        <div class="text-muted text-sm mt-xs">Ingresos</div>
+                        <div class="text-xs mt-xs text-positive-light">↑ 5.2% vs mes anterior</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" id="reports-totalExpenses">-€1,245</div>
+                        <div class="text-muted text-sm mt-xs">Gastos</div>
+                        <div class="text-xs mt-xs text-positive-light">↑ 12% vs mes anterior</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono text-gold" id="reports-netSavings">+€1,605</div>
+                        <div class="text-muted text-sm mt-xs">Ahorro Neto</div>
+                        <div class="text-xs mt-xs text-positive-light">↑ 8.3% vs mes anterior</div>
+                    </div>
+                    <div class="card text-center" style="padding: var(--space-lg);">
+                        <div class="text-xl font-bold font-mono" id="reports-savingsRate">56%</div>
+                        <div class="text-muted text-sm mt-xs">Tasa de Ahorro</div>
+                        <div class="text-xs mt-xs text-positive-light">Excelente</div>
+                    </div>
+                </div>
+
+                <!-- Wealth Distribution & Evolution Charts -->
+                <div class="grid grid-2 gap-lg mb-lg">
+                    <div class="card">
+                        <div class="card-title mb-md">💰 Distribución de Patrimonio</div>
+                        <div style="height: 280px;">
+                            <canvas id="reports-wealthDistributionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title mb-md">📈 Evolución del Patrimonio</div>
+                        <div style="height: 280px;">
+                            <canvas id="reports-assetGrowthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2 gap-lg">
+                    <!-- Spending by Category Chart -->
+                    <div class="card">
+                        <div class="card-title mb-md">🍕 Gastos por Categoría</div>
+                        <div style="height: 280px;">
+                            <canvas id="reports-categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="card">
+                        <div class="card-title mb-md">📋 Desglose</div>
+                        <div class="category-breakdown" id="reports-categoryBreakdown">
+                            <!-- Filled by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Income vs Expenses Trend -->
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <div class="card-title mb-md">📈 Evolución Ingresos vs Gastos</div>
+                        <div style="height: 280px;">
+                            <canvas id="reports-trendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Merchants -->
+                    <div class="card">
+                        <div class="card-title mb-md">🏪 Donde Más Gastas</div>
+                        <div class="flex flex-col gap-sm" id="reports-topMerchants">
+                            <!-- Filled by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Daily Average -->
+                    <div class="card">
+                        <div class="card-title mb-md">📅 Gasto Diario</div>
+                        <div style="height: 280px;">
+                            <canvas id="reports-dailyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: IMPORT -->
+            <div id="view-import" class="view-section" style="display: none;">
+                <div class="import-container" style="max-width: 900px; margin: 0 auto;">
+                    <div class="mb-lg">
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">Importar Transacciones</h1>
+                        <p class="text-secondary">Sube archivos de tu banco para importar automáticamente tus
+                            movimientos</p>
+                    </div>
+
+                    <!-- Steps Indicator -->
+                    <div class="steps-indicator"
+                        style="display: flex; justify-content: center; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+                        <div class="step active" id="import-step1"
+                            style="display: flex; align-items: center; gap: var(--space-sm); color: var(--gold-primary);">
+                            <span class="step-number"
+                                style="width: 28px; height: 28px; border: 2px solid currentColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: var(--font-medium);">1</span>
+                            <span>Subir archivo</span>
+                        </div>
+                        <div class="step" id="import-step2"
+                            style="display: flex; align-items: center; gap: var(--space-sm); color: var(--text-muted);">
+                            <span class="step-number"
+                                style="width: 28px; height: 28px; border: 2px solid currentColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: var(--font-medium);">2</span>
+                            <span>Revisar datos</span>
+                        </div>
+                        <div class="step" id="import-step3"
+                            style="display: flex; align-items: center; gap: var(--space-sm); color: var(--text-muted);">
+                            <span class="step-number"
+                                style="width: 28px; height: 28px; border: 2px solid currentColor; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: var(--font-medium);">3</span>
+                            <span>Importar</span>
+                        </div>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div id="import-uploadSection" class="card">
+                        <input type="file" id="import-fileInput" accept=".csv,.ofx,.qfx,.qif,.txt"
+                            style="display: none;">
+
+                        <div class="drop-zone" id="import-dropZone"
+                            style="border: 2px dashed var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-2xl); text-align: center; cursor: pointer; background: var(--bg-tertiary);">
+                            <div style="font-size: 3rem; margin-bottom: var(--space-md);">📁</div>
+                            <div style="color: var(--text-secondary); margin-bottom: var(--space-sm);">Arrastra tu
+                                archivo aquí o haz clic para seleccionar</div>
+                            <div style="font-size: var(--text-xs); color: var(--text-muted);">Formatos soportados: CSV,
+                                OFX, QFX, QIF</div>
+                        </div>
+
+                        <div class="card-title mt-xl mb-md">📖 Guías por Banco</div>
+                        <p class="text-secondary mb-md">Selecciona tu banco para ver instrucciones específicas de cómo
+                            descargar tus movimientos:</p>
+
+                        <div id="import-bankGuides"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-md); margin-top: var(--space-lg);">
+                            <div class="bank-guide-item" data-bank="bbva"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🏦</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">BBVA</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="santander"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🔴</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Santander</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="caixabank"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    ⭐</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">CaixaBank</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="ing"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🦁</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">ING</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="imagin"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    📱</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Imagin</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="revolut"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🇷</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Revolut</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="n26"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🇳</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">N26</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="traderepublic"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    📈</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Trade Rep.
+                                </div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="sabadell"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🔵</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Sabadell</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="bankinter"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🟠</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Bankinter</div>
+                            </div>
+                            <div class="bank-guide-item" data-bank="openbank"
+                                style="display: flex; flex-direction: column; align-items: center; padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius-md); cursor: pointer; text-align: center;">
+                                <div
+                                    style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-sm); font-size: 1.5rem;">
+                                    🗝️</div>
+                                <div style="font-size: var(--text-sm); font-weight: var(--font-medium);">Openbank</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section (hidden by default) -->
+                    <div id="import-previewSection" class="card" style="display: none;">
+                        <div class="flex justify-between items-center mb-lg">
+                            <div>
+                                <div class="card-title">Vista Previa</div>
+                                <div class="text-muted" id="import-fileName">archivo.csv</div>
+                            </div>
+                            <button class="btn btn-ghost" onclick="Import.reset()">← Volver</button>
+                        </div>
+
+                        <div
+                            style="display: flex; gap: var(--space-lg); padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-md); margin: var(--space-lg) 0;">
+                            <div style="text-align: center;">
+                                <div style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gold-primary);"
+                                    id="import-totalTransactions">0</div>
+                                <div style="font-size: var(--text-xs); color: var(--text-muted);">Transacciones</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--positive-light);"
+                                    id="import-totalIncome">€0</div>
+                                <div style="font-size: var(--text-xs); color: var(--text-muted);">Ingresos</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--negative-light);"
+                                    id="import-totalExpenses">€0</div>
+                                <div style="font-size: var(--text-xs); color: var(--text-muted);">Gastos</div>
+                            </div>
+                        </div>
+
+                        <div id="import-previewTableBody" style="max-height: 300px; overflow-y: auto;"></div>
+
+                        <div class="flex justify-end mt-lg">
+                            <button class="btn btn-primary" onclick="Import.confirm()">Importar Transacciones</button>
+                        </div>
+                    </div>
+
+                    <!-- Success Section (hidden by default) -->
+                    <div id="import-successSection" class="card" style="display: none; text-align: center;">
+                        <div style="font-size: 4rem; margin-bottom: var(--space-lg);">✅</div>
+                        <h2 class="text-gold mb-md">¡Importación Completada!</h2>
+                        <p class="text-secondary mb-lg" id="import-successMessage">Se han importado 0 transacciones
+                            correctamente.</p>
+                        <div class="flex justify-center gap-md">
+                            <button class="btn btn-ghost" onclick="Import.reset()">Importar más</button>
+                            <button class="btn btn-primary" onclick="Navigation.navigateTo('transactions')">Ver
+                                Transacciones</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="view-section" style="display: none;">
+                <h1 style="font-size: var(--text-2xl); margin-bottom: var(--space-lg);">Configuración</h1>
+
+                <!-- Profile Section -->
+                <div class="card" style="margin-bottom: var(--space-md);">
+                    <div class="flex gap-md items-center justify-between wrap">
+                        <div class="flex gap-md items-center">
+                            <div id="settings-userAvatar"
+                                style="width: 60px; height: 60px; background: var(--gold-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--bg-primary); overflow: hidden;">
+                                GF
+                            </div>
+                            <div>
+                                <h3 id="settings-userName">Usuario GentleFinances</h3>
+                                <p class="text-secondary" id="settings-userEmail">usuario@email.com</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="AuthService.logout()">Cerrar Sesión</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-md">
+                    <!-- Importar Datos Bancarios -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📥 Importar Datos Bancarios</h3>
+                            <button class="btn btn-ghost btn-sm" onclick="Settings.showBankHelp()" title="Ayuda">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="text-muted text-sm mb-md">Importa transacciones desde un archivo de tu banco (CSV,
+                            OFX, QIF)</p>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="Navigation.navigateTo('import')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            Importar desde banco
+                        </button>
+                    </div>
+
+                    <!-- Preferences -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">⚙️ Preferencias</h3>
+                        </div>
+                        <div class="flex flex-col gap-md">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div>Moneda</div>
+                                    <div class="text-muted text-sm">Moneda predeterminada</div>
+                                </div>
+                                <select id="currencySelect" class="input input-filled" style="width: auto;"
+                                    onchange="Settings.setCurrency(this.value)">
+                                    <option value="EUR" selected>€ EUR</option>
+                                    <option value="USD">$ USD</option>
+                                    <option value="GBP">£ GBP</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div>Idioma / Language</div>
+                                    <div class="text-muted text-sm">Español · English · Deutsch</div>
+                                </div>
+                                <select id="languageSelect" class="input input-filled" style="width: auto;"
+                                    onchange="Settings.setLanguage(this.value)">
+                                    <option value="es">🇪🇸 Español</option>
+                                    <option value="en">🇬🇧 English</option>
+                                    <option value="de">🇩🇪 Deutsch</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div>Modo Oscuro</div>
+                                    <div class="text-muted text-sm" id="darkModeStatus">Activado</div>
+                                </div>
+                                <div id="darkModeToggle" class="toggle-switch active"
+                                    onclick="Settings.toggleDarkMode()">
+                                    <div class="toggle-knob"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div>Notificaciones</div>
+                                    <div class="text-muted text-sm" id="notifStatus">Activadas</div>
+                                </div>
+                                <div id="notifToggle" class="toggle-switch active"
+                                    onclick="Settings.toggleNotifications()">
+                                    <div class="toggle-knob"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">💾 Datos</h3>
+                        </div>
+                        <div class="flex flex-col gap-sm">
+                            <button class="btn btn-secondary" style="width: 100%;">Exportar todos los datos
+                                (CSV)</button>
+                            <button class="btn btn-ghost" style="width: 100%;"
+                                onclick="Navigation.navigateTo('import')">Importar transacciones</button>
+                            <button class="btn btn-ghost"
+                                style="width: 100%; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3);"
+                                onclick="Settings.clearCloudData()">🔥 BORRAR DATOS NUBE</button>
+                            <button class="btn btn-ghost" style="width: 100%; color: var(--negative-light);"
+                                onclick="Settings.resetApp()">Fresh Start
+                                (Reiniciar presupuesto)</button>
+                        </div>
+                    </div>
+
+                    <!-- About -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">ℹ️ Acerca de</h3>
+                        </div>
+                        <div class="flex flex-col gap-sm text-secondary text-sm">
+                            <div class="flex justify-between"><span>Versión</span><span>1.0.0</span></div>
+                            <div class="flex justify-between"><span>Última sincronización</span><span>Hace 5 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SECURITY -->
+            <div id="view-security" class="view-section" style="display: none;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div class="mb-lg">
+                        <h1 class="text-gold" style="font-size: var(--text-2xl);">🔒 Seguridad</h1>
+                        <p class="text-secondary">Protege tu información financiera</p>
+                    </div>
+
+                    <!-- Security Score (dinámico) -->
+                    <div
+                        style="display: flex; align-items: center; gap: var(--space-lg); padding: var(--space-lg); background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(74, 222, 128, 0.05)); border: 1px solid rgba(74, 222, 128, 0.2); border-radius: var(--radius-lg); margin-bottom: var(--space-lg);">
+                        <div id="security-score-circle"
+                            style="width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(var(--positive-light) 50%, var(--bg-tertiary) 0); display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0;">
+                            <div
+                                style="position: absolute; width: 60px; height: 60px; background: var(--bg-primary); border-radius: 50%;">
+                            </div>
+                            <span id="security-score-value"
+                                style="position: relative; font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--positive-light);">50%</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <div id="security-score-label"
+                                style="font-weight: var(--font-semibold); font-size: var(--text-lg); margin-bottom: var(--space-xs);">
+                                Nivel de Seguridad Bueno</div>
+                            <div style="color: var(--text-muted); font-size: var(--text-sm);">Añade un PIN para aumentar
+                                tu puntuación de seguridad</div>
+                        </div>
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="card mb-lg">
+                        <div class="card-title mb-md">🔑 Contraseña de Cuenta</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div style="font-weight: var(--font-medium);">Cambiar Contraseña</div>
+                                <div class="text-muted text-sm">Actualiza tu contraseña de acceso a la cuenta</div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm"
+                                onclick="Security.changePassword()">Cambiar</button>
+                        </div>
+                    </div>
+
+                    <!-- PIN -->
+                    <div class="card mb-lg">
+                        <div class="card-title mb-md">🔐 Código PIN de Aplicación</div>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div style="font-weight: var(--font-medium);">
+                                    Código PIN
+                                    <span id="security-pin-status"
+                                        style="background: rgba(148,163,184,0.15); color: var(--text-muted); padding: 2px 8px; border-radius: var(--radius-full); font-size: var(--text-xs); margin-left: 8px;">Desactivado</span>
+                                </div>
+                                <div class="text-muted text-sm">Protege la app con un PIN de 4 dígitos (guardado con
+                                    hash SHA-256)</div>
+                            </div>
+                            <div class="flex gap-sm">
+                                <button id="security-pin-setup-btn" class="btn btn-secondary btn-sm"
+                                    onclick="Security.setupPIN()">Configurar PIN</button>
+                                <button id="security-pin-change-btn" class="btn btn-ghost btn-sm"
+                                    onclick="Security.changePIN()" style="display:none;">Cambiar</button>
+                                <button id="security-pin-remove-btn" class="btn btn-ghost btn-sm"
+                                    onclick="Security.removePIN()"
+                                    style="display:none; color: var(--error-light);">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions -->
+                    <div class="card mb-lg">
+                        <div class="card-title mb-md">📱 Sesiones Activas</div>
+                        <div class="flex flex-col gap-sm" id="security-sessions-list">
+                            <div class="text-muted text-center">Cargando sesiones...</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm mt-md" onclick="Security.revokeAllSessions()">Cerrar
+                            Todas las Demás Sesiones</button>
+                    </div>
+
+                    <!-- Data Protection -->
+                    <div class="card">
+                        <div class="card-title mb-md">🛡️ Protección de Datos</div>
+                        <div class="flex flex-col gap-md">
+                            <div class="flex justify-between items-center"
+                                style="padding: var(--space-md) 0; border-bottom: 1px solid var(--border-subtle);">
+                                <div>
+                                    <div style="font-weight: var(--font-medium);">Cifrado Firebase + HTTPS</div>
+                                    <div class="text-muted text-sm">Datos cifrados en tránsito (TLS) y en reposo
+                                        (Firebase AES-256)</div>
+                                </div>
+                                <span
+                                    style="background: rgba(74,222,128,0.15); color: var(--positive-light); padding: 4px 10px; border-radius: var(--radius-full); font-size: var(--text-xs);">✓
+                                    Activo</span>
+                            </div>
+                            <div class="flex justify-between items-center"
+                                style="padding: var(--space-md) 0; border-bottom: 1px solid var(--border-subtle);">
+                                <div>
+                                    <div style="font-weight: var(--font-medium);">PIN con Hash SHA-256</div>
+                                    <div class="text-muted text-sm">El PIN nunca se guarda en claro, solo su hash</div>
+                                </div>
+                                <span
+                                    style="background: rgba(74,222,128,0.15); color: var(--positive-light); padding: 4px 10px; border-radius: var(--radius-full); font-size: var(--text-xs);">✓
+                                    Activo</span>
+                            </div>
+                            <div class="flex justify-between items-center" style="padding: var(--space-md) 0;">
+                                <div>
+                                    <div style="font-weight: var(--font-medium);">Exportar Todos Mis Datos (GDPR)</div>
+                                    <div class="text-muted text-sm">Descarga un JSON con todas tus transacciones,
+                                        cuentas y ajustes</div>
+                                </div>
+                                <button class="btn btn-ghost btn-sm" onclick="Security.exportGDPR()">Exportar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: HELP -->
+            <div id="view-help" class="view-section" style="display: none;">
+                <div style="max-width: 900px; margin: 0 auto;">
+                    <!-- Hero -->
+                    <div style="text-align: center; padding: var(--space-xl) 0; margin-bottom: var(--space-lg);">
+                        <h1 class="text-gold" style="font-size: var(--text-3xl); margin-bottom: var(--space-md);">¿En
+                            qué podemos ayudarte?</h1>
+                        <p class="text-secondary mb-lg">Busca en nuestra base de conocimientos o explora las categorías
+                        </p>
+                        <div style="max-width: 500px; margin: 0 auto; position: relative;">
+                            <span <div style="position: relative; max-width: 500px;">
+                                <span
+                                    style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path d="M21 21l-4.35-4.35" />
+                                    </svg>
+                                </span>
+                                <input type="text" placeholder="Buscar ayuda..." id="help-search" class="input"
+                                    style="width: 100%; padding-left: 48px; border-radius: var(--radius-full);"
+                                    oninput="Help.search(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl);">
+                        <div class="card"
+                            style="display: flex; flex-direction: column; align-items: center; padding: var(--space-lg); cursor: pointer; text-align: center;"
+                            onclick="Help.scrollTo('help-getting-started')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)"
+                                stroke-width="1.5" style="margin-bottom: var(--space-sm);">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            <div style="font-weight: var(--font-medium);">Empezar</div>
+                        </div>
+                        <div class="card"
+                            style="display: flex; flex-direction: column; align-items: center; padding: var(--space-lg); cursor: pointer; text-align: center;"
+                            onclick="Navigation.navigateTo('budget')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)"
+                                stroke-width="1.5" style="margin-bottom: var(--space-sm);">
+                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                                <line x1="9" y1="3" x2="9" y2="21" />
+                            </svg>
+                            <div style="font-weight: var(--font-medium);">Presupuestos</div>
+                        </div>
+                        <div class="card"
+                            style="display: flex; flex-direction: column; align-items: center; padding: var(--space-lg); cursor: pointer; text-align: center;"
+                            onclick="Navigation.navigateTo('import')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)"
+                                stroke-width="1.5" style="margin-bottom: var(--space-sm);">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <div style="font-weight: var(--font-medium);">Importar Datos</div>
+                        </div>
+                        <div class="card"
+                            style="display: flex; flex-direction: column; align-items: center; padding: var(--space-lg); cursor: pointer; text-align: center;"
+                            onclick="Navigation.navigateTo('security')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold-primary)"
+                                stroke-width="1.5" style="margin-bottom: var(--space-sm);">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <div style="font-weight: var(--font-medium);">Seguridad</div>
+                        </div>
+                    </div>
+
+                    <!-- Getting Started -->
+                    <div class="mb-xl" id="help-getting-started">
+                        <h2 class="text-gold mb-md" style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            Guía de Inicio Rápido
+                        </h2>
+                        <div class="flex flex-col gap-md">
+                            <div class="card" style="display: flex; gap: var(--space-lg); padding: var(--space-lg);">
+                                <div
+                                    style="width: 40px; height: 40px; background: var(--gold-primary); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); flex-shrink: 0;">
+                                    1</div>
+                                <div>
+                                    <h3 style="margin-bottom: var(--space-xs);">Crea tu cuenta</h3>
+                                    <p class="text-muted text-sm">Regístrate con email y contraseña. Recibirás un email
+                                        de verificación. Tus datos se cifran automáticamente en Firebase con TLS y
+                                        AES-256 en reposo.</p>
+                                </div>
+                            </div>
+                            <div class="card" style="display: flex; gap: var(--space-lg); padding: var(--space-lg);">
+                                <div
+                                    style="width: 40px; height: 40px; background: var(--gold-primary); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); flex-shrink: 0;">
+                                    2</div>
+                                <div>
+                                    <h3 style="margin-bottom: var(--space-xs);">Importa tus movimientos bancarios</h3>
+                                    <p class="text-muted text-sm">Ve a <strong
+                                            style="color: var(--text-primary);">Importar</strong> en el menú lateral.
+                                        Descarga el CSV desde la banca online de tu banco (Imagin: App → tu cuenta →
+                                        botón de descarga ⬇️). Arrastra el archivo o haz clic para subirlo. La app
+                                        detecta automáticamente columnas y formatos.</p>
+                                </div>
+                            </div>
+                            <div class="card" style="display: flex; gap: var(--space-lg); padding: var(--space-lg);">
+                                <div
+                                    style="width: 40px; height: 40px; background: var(--gold-primary); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); flex-shrink: 0;">
+                                    3</div>
+                                <div>
+                                    <h3 style="margin-bottom: var(--space-xs);">Revisa el dashboard</h3>
+                                    <p class="text-muted text-sm">El <strong
+                                            style="color: var(--text-primary);">Resumen</strong> muestra tus ingresos y
+                                        gastos del mes actual, el saldo disponible acumulado de todas tus transacciones,
+                                        y la actividad reciente. Los valores se calculan directamente de tus
+                                        transacciones.</p>
+                                </div>
+                            </div>
+                            <div class="card" style="display: flex; gap: var(--space-lg); padding: var(--space-lg);">
+                                <div
+                                    style="width: 40px; height: 40px; background: var(--gold-primary); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); flex-shrink: 0;">
+                                    4</div>
+                                <div>
+                                    <h3 style="margin-bottom: var(--space-xs);">Crea un presupuesto</h3>
+                                    <p class="text-muted text-sm">Ve a <strong
+                                            style="color: var(--text-primary);">Presupuesto</strong> y elige una
+                                        plantilla como <em>50/30/20</em> (50% necesidades, 30% deseos, 20% ahorro) o
+                                        crea categorías personalizadas. La app te avisará cuando te acerques al límite.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="card" style="display: flex; gap: var(--space-lg); padding: var(--space-lg);">
+                                <div
+                                    style="width: 40px; height: 40px; background: var(--gold-primary); color: var(--bg-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); flex-shrink: 0;">
+                                    5</div>
+                                <div>
+                                    <h3 style="margin-bottom: var(--space-xs);">Analiza con Informes</h3>
+                                    <p class="text-muted text-sm">En <strong
+                                            style="color: var(--text-primary);">Informes</strong> encontrarás gráficas
+                                        de gastos por categoría, evolución de ingresos vs gastos, y el ranking de
+                                        comercios donde más gastas. Filtra por semana, mes o año.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Importar CSV: Guía por banco -->
+                    <div class="mb-xl" id="help-import-guide">
+                        <h2 class="text-gold mb-md" style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            Cómo exportar el CSV por banco
+                        </h2>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);">
+                            <div class="card" style="padding: var(--space-lg);">
+                                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">📱 Imagin / CaixaBank
+                                </div>
+                                <ol class="text-muted text-sm" style="padding-left: 1.2rem; line-height: 1.8;">
+                                    <li>Abre la App de Imagin</li>
+                                    <li>Pulsa sobre tu cuenta</li>
+                                    <li>Toca el icono ⬇️ o "Descargar"</li>
+                                    <li>Selecciona el período</li>
+                                    <li>Comparte el archivo CSV a tu email o iCloud</li>
+                                    <li>Sube el archivo en <strong>Importar</strong></li>
+                                </ol>
+                            </div>
+                            <div class="card" style="padding: var(--space-lg);">
+                                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">🟦 BBVA</div>
+                                <ol class="text-muted text-sm" style="padding-left: 1.2rem; line-height: 1.8;">
+                                    <li>Entra en bbva.es → banca online</li>
+                                    <li>Selecciona tu cuenta</li>
+                                    <li>Ve a Movimientos</li>
+                                    <li>Pulsa el icono de descarga (hoja con flecha)</li>
+                                    <li>Elige formato <strong>CSV</strong></li>
+                                    <li>Sube el archivo en <strong>Importar</strong></li>
+                                </ol>
+                            </div>
+                            <div class="card" style="padding: var(--space-lg);">
+                                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">🔴 Santander</div>
+                                <ol class="text-muted text-sm" style="padding-left: 1.2rem; line-height: 1.8;">
+                                    <li>Entra en bancosantander.es</li>
+                                    <li>Mis Cuentas → Ver movimientos</li>
+                                    <li>Selecciona rango de fechas</li>
+                                    <li>Pulsa "Exportar" → CSV o Excel</li>
+                                    <li>Sube el archivo en <strong>Importar</strong></li>
+                                </ol>
+                            </div>
+                            <div class="card" style="padding: var(--space-lg);">
+                                <div style="font-size: 1.5rem; margin-bottom: var(--space-sm);">R Revolut / N26</div>
+                                <ol class="text-muted text-sm" style="padding-left: 1.2rem; line-height: 1.8;">
+                                    <li><strong>Revolut:</strong> App → tu balance → ··· → Statement → CSV</li>
+                                    <li><strong>N26:</strong> app.n26.com → icono descarga → CSV</li>
+                                    <li>El CSV incluye descripción detallada del comercio</li>
+                                    <li>Sube el archivo en <strong>Importar</strong></li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="card mt-md"
+                            style="background: rgba(197,160,88,0.05); border-color: var(--gold-muted); padding: var(--space-md);">
+                            <strong style="color: var(--gold-primary);">💡 Consejo:</strong>
+                            <span class="text-muted text-sm"> Los importes negativos son gastos y los positivos son
+                                ingresos. La app detecta automáticamente el separador (punto y coma o coma) y el formato
+                                de fecha.</span>
+                        </div>
+                    </div>
+
+                    <!-- FAQ -->
+                    <div class="mb-xl" id="help-faq">
+                        <h2 class="text-gold mb-md" style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            Preguntas Frecuentes
+                        </h2>
+                        <div class="flex flex-col gap-sm" id="faq-container">
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Por qué el saldo disponible no coincide con mi banco?</span><span
+                                        class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    El saldo disponible en GentleFinances se calcula como la <strong>suma de todas tus
+                                        transacciones importadas</strong>. Si solo has importado transacciones de un
+                                    mes, el saldo solo reflejará ese período. Para ver el saldo real de tu cuenta,
+                                    importa el historial completo o añade el saldo inicial como una transacción
+                                    positiva.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo se distinguen los ingresos de los gastos en el CSV?</span><span
+                                        class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Los <strong>gastos tienen importe negativo</strong> (ej: -18,35EUR) y los
+                                    <strong>ingresos tienen importe positivo</strong> (ej: 1200,00EUR). La app lee
+                                    directamente el signo del importe. Si tu CSV tiene columnas separadas "Cargo" y
+                                    "Abono", la app las combina automáticamente.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo añado una transacción manual?</span><span class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Transacciones</strong> en el menú y pulsa el botón <strong>"+ Nueva
+                                        Transacción"</strong>. Introduce la fecha, descripción, importe (negativo para
+                                    gastos, positivo para ingresos) y categoría. Las transacciones manuales se guardan
+                                    en la nube junto con las importadas.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo cambio el idioma de la app?</span><span class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Configuración</strong> → sección Preferencias → <strong>Idioma /
+                                        Language</strong>. Puedes elegir Español 🇪🇸, English 🇬🇧 o Deutsch 🇩🇪. El
+                                    cambio se aplica inmediatamente y se guarda para futuras sesiones.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo protejo la app con PIN?</span><span class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Seguridad</strong> → "Código PIN" → "Configurar PIN". Introduce 4
+                                    dígitos numéricos y confírmalos. El PIN se guarda como hash SHA-256 (nunca en texto
+                                    plano). Para cambiar o eliminar el PIN, necesitarás introducir el PIN actual.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo cambio mi contraseña?</span><span class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Seguridad</strong> → "Cambiar Contraseña". Necesitarás introducir tu
+                                    contraseña actual para verificar tu identidad (requisito de seguridad de Firebase).
+                                    La nueva contraseña debe tener mínimo 8 caracteres.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo funcionan los Informes y las gráficas?</span><span
+                                        class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Los <strong>Informes</strong> generan gráficas basadas en tus transacciones reales:
+                                    dona de gastos por categoría, línea de tendencia ingresos vs gastos, barras de gasto
+                                    diario, y distribución de patrimonio. Filtra por <strong>Semana / Mes / Año</strong>
+                                    con los botones superiores.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo añado inversiones en acciones o cripto?</span><span
+                                        class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Mi Portfolio</strong> → Inversiones (para acciones/ETFs) o Cripto (para
+                                    criptomonedas). Pulsa el botón "+" para añadir una posición: introduce el símbolo
+                                    (ej: AAPL, BTC), la cantidad y el precio de compra. Los precios se actualizan en
+                                    tiempo real usando la API de Finnhub y CoinGecko.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Mis datos se sincronizan entre dispositivos?</span><span
+                                        class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Sí. Todos los datos se guardan en <strong>Firebase Firestore</strong> en tiempo
+                                    real. Si inicias sesión con la misma cuenta en otro dispositivo, verás exactamente
+                                    los mismos datos. Las transacciones, presupuestos, metas y ajustes se sincronizan
+                                    automáticamente.
+                                </div>
+                            </div>
+                            <div class="card faq-item" style="cursor: pointer;" onclick="Help.toggleFaq(this)">
+                                <div class="faq-question flex justify-between items-center"
+                                    style="padding: var(--space-md); font-weight: var(--font-medium);">
+                                    <span>¿Cómo exporto todos mis datos (GDPR)?</span><span class="faq-arrow">▼</span>
+                                </div>
+                                <div class="faq-answer"
+                                    style="display: none; padding: 0 var(--space-md) var(--space-md); color: var(--text-secondary); font-size: var(--text-sm);">
+                                    Ve a <strong>Seguridad</strong> → "Exportar Todos Mis Datos (GDPR)". Se descargará
+                                    un archivo JSON con todas tus transacciones, cuentas, presupuestos y ajustes. Este
+                                    archivo es tuyo y puedes usarlo como copia de seguridad o importarlo en otro
+                                    sistema.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Consejos de ahorro -->
+                    <div class="mb-xl" id="help-tips">
+                        <h2 class="text-gold mb-md" style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                            Consejos de Finanzas Personales
+                        </h2>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-md);">
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">📊 Regla
+                                    50/30/20</div>
+                                <p class="text-muted text-sm">Destina el 50% de tus ingresos a necesidades (alquiler,
+                                    comida, transporte), el 30% a deseos (ocio, salidas) y el 20% al ahorro y pago de
+                                    deudas.</p>
+                            </div>
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">🎯 Fondo
+                                    de Emergencia</div>
+                                <p class="text-muted text-sm">Mantén siempre un fondo equivalente a 3-6 meses de gastos
+                                    en una cuenta de ahorro accesible. Crea una Meta en la app para seguir el progreso.
+                                </p>
+                            </div>
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">❄️
+                                    Zero-Based Budgeting</div>
+                                <p class="text-muted text-sm">Cada euro de tus ingresos tiene un destino asignado. La
+                                    suma de gastos + ahorro = ingresos totales. No "sobra" dinero sin propósito.</p>
+                            </div>
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">🏂
+                                    Método Bola de Nieve</div>
+                                <p class="text-muted text-sm">Para pagar deudas: empieza por la más pequeña mientras
+                                    pagas el mínimo en las demás. Al liquidarla, usa ese dinero para la siguiente.
+                                    Genera motivación visible.</p>
+                            </div>
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">🔔
+                                    Alerta de Presupuesto</div>
+                                <p class="text-muted text-sm">Configura presupuestos por categoría y activa las
+                                    notificaciones. La app te avisará cuando llegues al 80% y al 100% de cada categoría.
+                                </p>
+                            </div>
+                            <div class="card"
+                                style="padding: var(--space-lg); border-left: 3px solid var(--gold-primary);">
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">📈
+                                    Invierte el ahorro</div>
+                                <p class="text-muted text-sm">Una vez tengas tu fondo de emergencia, considera invertir
+                                    en ETFs de bajo coste o acciones indexadas para que tu ahorro crezca con el tiempo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div id="help-contact">
+                        <h2 class="text-gold mb-md" style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                            Contacto y Soporte
+                        </h2>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-md);">
+                            <div class="card" style="text-align: center; padding: var(--space-xl);">
+                                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">🐛</div>
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">Reportar
+                                    Bug</div>
+                                <div class="text-muted text-sm mb-md">Si encuentras un error en la app, descríbelo con
+                                    detalle</div>
+                                <a href="mailto:soporte@gentlefinances.app?subject=Bug Report"
+                                    class="btn btn-secondary btn-sm" style="width: 100%;">Enviar reporte</a>
+                            </div>
+                            <div class="card" style="text-align: center; padding: var(--space-xl);">
+                                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">💡</div>
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">Sugerir
+                                    Mejora</div>
+                                <div class="text-muted text-sm mb-md">¿Tienes una idea para mejorar GentleFinances?
+                                </div>
+                                <a href="mailto:soporte@gentlefinances.app?subject=Feature Request"
+                                    class="btn btn-secondary btn-sm" style="width: 100%;">Enviar sugerencia</a>
+                            </div>
+                            <div class="card" style="text-align: center; padding: var(--space-xl);">
+                                <div style="font-size: 2rem; margin-bottom: var(--space-sm);">📖</div>
+                                <div style="font-weight: var(--font-semibold); margin-bottom: var(--space-xs);">Versión
+                                    de la App</div>
+                                <div class="text-muted text-sm mb-md">GentleFinances v3.1</div>
+                                <div class="text-muted text-sm">Firebase · Vanilla JS · PWA</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Security Lock Screen -->
+    <div id="security-lock-screen"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-primary); z-index: 9999; align-items: center; justify-content: center; flex-direction: column;">
+        <div
+            style="width: 80px; height: 80px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: var(--space-lg); border: 1px solid var(--gold-primary); box-shadow: 0 0 20px rgba(197, 160, 88, 0.2);">
+            🔒
+        </div>
+        <h2 class="text-gold" style="font-size: var(--text-2xl); margin-bottom: var(--space-md);">Seguridad Activada
+        </h2>
+        <p class="text-secondary mb-xl">Introduce tu PIN para acceder</p>
+
+        <form onsubmit="event.preventDefault(); Security.unlock();"
+            style="display: flex; flex-direction: column; align-items: center; gap: var(--space-md); width: 100%; max-width: 300px;">
+            <input type="password" id="security-pin-input" class="input" placeholder="PIN" maxlength="8"
+                style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem; width: 200px;" autofocus>
+
+            <button type="submit" class="btn btn-primary" style="width: 200px;">Desbloquear</button>
+        </form>
+
+        <button onclick="Security.forgotPin()" class="btn btn-ghost btn-sm mt-lg text-muted">¿Olvidaste tu PIN?</button>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="addTransactionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Nueva Transacción</h3>
+                <button class="btn btn-icon btn-ghost modal-close" aria-label="Cerrar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <form id="transactionForm">
+                <div class="flex flex-col gap-lg">
+                    <!-- Type Toggle -->
+                    <div class="card p-xs flex gap-sm" style="background: var(--bg-tertiary); border: none;">
+                        <button type="button" id="typeExpense" class="btn btn-secondary flex-1"
+                            style="justify-content: center;">Gasto</button>
+                        <button type="button" id="typeIncome" class="btn btn-ghost flex-1"
+                            style="justify-content: center;">Ingreso</button>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="input-group">
+                        <label class="input-label" for="amount">Importe</label>
+                        <div class="flex items-center gap-sm">
+                            <span class="text-gold" style="font-size: var(--text-xl);">€</span>
+                            <input type="number" id="amount" class="input" placeholder="0.00" step="0.01"
+                                style="font-size: var(--text-2xl); font-weight: var(--font-bold);" required>
+                        </div>
+                    </div>
+
+                    <!-- Concept -->
+                    <div class="input-group">
+                        <label class="input-label" for="merchant">Concepto</label>
+                        <input type="text" id="merchant" class="input" placeholder="Ej: Mercadona, Nómina..." required>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="input-group">
+                        <label class="input-label" for="category">Categoría</label>
+                        <div class="select-wrapper">
+                            <select id="category" class="input">
+                                <option value="food">🍽️ Alimentación</option>
+                                <option value="transport">🚗 Transporte</option>
+                                <option value="entertainment">🎬 Ocio</option>
+                                <option value="bills">📄 Facturas</option>
+                                <option value="shopping">🛍️ Compras</option>
+                                <option value="health">🏥 Salud</option>
+                                <option value="subscriptions">📺 Suscripciones</option>
+                                <option value="income">💼 Ingresos</option>
+                                <option value="other">📦 Otros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="input-group">
+                        <label class="input-label" for="date">Fecha</label>
+                        <input type="date" id="date" class="input">
+                    </div>
+
+                    <!-- File Upload Grid -->
+                    <div class="input-group">
+                        <label class="input-label">Archivos Adjuntos (Máx 5)</label>
+                        <div id="fileGrid" class="file-grid">
+                            <!-- Helper for empty state or adding more -->
+                            <div class="file-add-btn" onclick="document.getElementById('transactionFile').click()">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <input type="file" id="transactionFile" class="input" accept="image/*,.pdf" multiple
+                            style="display: none;" onchange="window.GentleFinances.handleFileSelect(this)">
+                        <div class="text-xs text-muted mt-xs">Imágenes y PDF. Click para añadir.</div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="transactionId" name="transactionId">
+                <!-- Legacy hidden inputs for backward compatibility -->
+                <input type="hidden" id="currentFileUrl" name="currentFileUrl">
+                <input type="hidden" id="currentFileName" name="currentFileName">
+                <!-- Hidden inputs for persistence logic (now serialized as JSON string for array) -->
+                <input type="hidden" id="existingFiles" name="existingFiles">
+                <div class="modal-footer" style="justify-content: space-between;">
+                    <button type="button" class="btn btn-ghost" id="deleteTransactionBtn"
+                        style="display: none; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3);"
+                        onclick="GentleFinances.confirmAndDeleteTransaction()">Eliminar</button>
+                    <div style="display: flex; gap: var(--space-md); margin-left: auto;">
+                        <button type="button" class="btn btn-ghost modal-close"
+                            id="cancelTransactionBtn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal-overlay" id="subscriptionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="subModalTitle">Nueva Suscripción</h3>
+                <button class="btn btn-icon btn-ghost modal-close" aria-label="Cerrar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <form id="subscriptionForm">
+                <input type="hidden" id="subId">
+                <div class="flex flex-col gap-lg">
+                    <!-- Name -->
+                    <div class="input-group">
+                        <label class="input-label" for="subName">Nombre</label>
+                        <input type="text" id="subName" class="input" placeholder="Ej: Netflix, Spotify..." required>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="input-group">
+                        <label class="input-label" for="subAmount">Precio (€)</label>
+                        <div class="flex items-center gap-sm">
+                            <span class="text-gold" style="font-size: var(--text-xl);">€</span>
+                            <input type="number" id="subAmount" class="input" placeholder="0.00" step="0.01"
+                                style="font-size: var(--text-2xl); font-weight: var(--font-bold);" required>
+                        </div>
+                    </div>
+
+                    <!-- Frequency -->
+                    <div class="input-group">
+                        <label class="input-label" for="subFrequency">Frecuencia</label>
+                        <select id="subFrequency" class="input">
+                            <option value="monthly">Mensual</option>
+                            <option value="yearly">Anual</option>
+                            <option value="weekly">Semanal</option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="input-group">
+                        <label class="input-label" for="subStatus">Estado</label>
+                        <select id="subStatus" class="input">
+                            <option value="active">Activa</option>
+                            <option value="paused">Pausada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="justify-content: space-between;">
+                    <button type="button" class="btn btn-ghost" id="deleteSubscriptionBtn"
+                        style="display: none; color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3);"
+                        onclick="Subscriptions.delete()">Eliminar</button>
+                    <div style="display: flex; gap: var(--space-md); margin-left: auto;">
+                        <button type="button" class="btn btn-ghost modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- Safety Confirmation Modal -->
+    <div class="modal-overlay" id="safetyModal" style="z-index: 9999;">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div
+                    style="width: 64px; height: 64px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h3 class="modal-title" id="safetyTitle"
+                    style="margin-bottom: var(--space-sm); color: var(--text-primary);">¿Estás seguro?</h3>
+                <p id="safetyMessage" style="color: var(--text-secondary); margin-bottom: var(--space-lg);">Esta acción
+                    no se puede deshacer.</p>
+
+                <div class="input-group" style="margin-bottom: var(--space-lg);">
+                    <label class="input-label" style="text-align: center; margin-bottom: var(--space-sm);">Escribe
+                        "<span style="user-select: all; font-weight: bold; color: var(--text-primary);">borrar</span>"
+                        para confirmar:</label>
+                    <input type="text" id="safetyInput" class="input" placeholder="borrar"
+                        style="text-align: center; letter-spacing: 1px; font-weight: bold;">
+                </div>
+
+                <div class="flex gap-md">
+                    <button class="btn btn-ghost flex-1" onclick="Safety.close()">Cancelar</button>
+                    <button class="btn btn-primary flex-1" id="safetyConfirmBtn" disabled
+                        style="background: #ef4444; border-color: #ef4444; color: white;">
+                        <span id="safetyBtnText">Espera 5s...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts Moved to End of Body -->
+
+
+    <!-- MODAL: ADD GOAL -->
+    <div id="addGoalModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Nueva Meta de Ahorro</h2>
+                <button class="modal-close" onclick="Goals.closeModal('addGoalModal')">×</button>
+            </div>
+            <form id="goalForm" onsubmit="event.preventDefault(); Goals.saveGoal();">
+                <input type="hidden" id="goalId">
+                <div class="input-group">
+                    <label class="input-label" for="goalName">Nombre de la Meta</label>
+                    <input type="text" id="goalName" class="input" placeholder="Ej: Viaje a Japón, Coche Nuevo..."
+                        required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="goalTarget">Objetivo (€)</label>
+                    <input type="number" id="goalTarget" class="input" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="goalSaved">Ahorrado Actualmente (€)</label>
+                    <input type="number" id="goalSaved" class="input" placeholder="0.00" step="0.01" value="0">
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="goalDeadline">Fecha Límite (Opcional)</label>
+                    <input type="date" id="goalDeadline" class="input">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Icono</label>
+                    <div class="" id="goalIconSelector"
+                        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <button type="button" class="btn btn-ghost btn-icon active"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="✈️"
+                            onclick="Goals.selectIcon(this)">✈️</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="🏠"
+                            onclick="Goals.selectIcon(this)">🏠</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="🚗"
+                            onclick="Goals.selectIcon(this)">🚗</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="💻"
+                            onclick="Goals.selectIcon(this)">💻</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="🎓"
+                            onclick="Goals.selectIcon(this)">🎓</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="🎉"
+                            onclick="Goals.selectIcon(this)">🎉</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="🏥"
+                            onclick="Goals.selectIcon(this)">🏥</button>
+                        <button type="button" class="btn btn-ghost btn-icon"
+                            style="width: 100%; height: auto; aspect-ratio: 1; font-size: 2rem;" data-icon="💍"
+                            onclick="Goals.selectIcon(this)">💍</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost"
+                        onclick="Goals.closeModal('addGoalModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Meta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CONTRIBUTE GOAL -->
+    <div id="contributeModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Añadir Fondos</h2>
+                <button class="modal-close" onclick="Goals.closeModal('contributeModal')">×</button>
+            </div>
+            <form id="contributeForm" onsubmit="event.preventDefault(); Goals.saveContribution();">
+                <input type="hidden" id="contributeGoalId">
+                <div class="input-group">
+                    <label class="input-label" for="contributeAmount">Cantidad a añadir (€)</label>
+                    <input type="number" id="contributeAmount" class="input" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost"
+                        onclick="Goals.closeModal('contributeModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Añadir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORT GUIDE -->
+    <div id="importGuideModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                    <div id="guideIcon"
+                        style="width: 40px; height: 40px; background: var(--bg-tertiary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        🏦</div>
+                    <h2 class="modal-title" id="guideTitle">Cómo exportar datos</h2>
+                </div>
+                <button class="modal-close" onclick="Import.closeGuideModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="guideBody">
+                    <!-- Steps will be injected here -->
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+                <div id="guideFormat" class="text-sm text-secondary">
+                    <!-- Format info -->
+                </div>
+                <a href="#" target="_blank" id="guideLink" class="btn btn-primary">
+                    Ver Ayuda Oficial
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-left: 8px;">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD DEBT -->
+    <div id="addDebtModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Añadir Deuda</h2>
+                <button class="modal-close" onclick="Goals.closeModal('addDebtModal')">×</button>
+            </div>
+            <form id="debtForm" onsubmit="event.preventDefault(); Goals.saveDebt();">
+                <input type="hidden" id="debtId">
+                <div class="input-group">
+                    <label class="input-label" for="debtName">Nombre de la Deuda</label>
+                    <input type="text" id="debtName" class="input" placeholder="Ej: Tarjeta de Crédito, Préstamo..."
+                        required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="debtTotal">Deuda Total (€)</label>
+                    <input type="number" id="debtTotal" class="input" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="debtRate">Interés Anual (%)</label>
+                    <input type="number" id="debtRate" class="input" placeholder="Ej: 15.5" step="0.1" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="debtMinPayment">Pago Mínimo Mensual (€)</label>
+                    <input type="number" id="debtMinPayment" class="input" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="debtPaid">Cantidad Pagada (€)</label>
+                    <input type="number" id="debtPaid" class="input" placeholder="0.00" step="0.01" value="0">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost"
+                        onclick="Goals.closeModal('addDebtModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Deuda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: EXPORT REPORT -->
+    <div id="exportReportModal" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Exportar Informe Financiero</h2>
+                <button class="modal-close" onclick="Reports.closeExportModal()">×</button>
+            </div>
+            <div class="modal-body" style="padding: var(--space-lg);">
+                <p class="text-secondary mb-lg">Selecciona las secciones que deseas incluir en tu informe personalizado.
+                </p>
+
+                <form id="exportReportForm" onsubmit="event.preventDefault(); Reports.exportData();">
+                    <div class="flex flex-col gap-md mb-xl">
+                        <label class="flex items-center gap-md p-md card"
+                            style="cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);">
+                            <input type="checkbox" name="section" value="wealth" checked
+                                style="width: 20px; height: 20px; accent-color: var(--gold-primary);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold);">Resumen de Patrimonio</div>
+                                <div class="text-xs text-muted">Ahorros, inversiones y activos totales.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-md p-md card"
+                            style="cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);">
+                            <input type="checkbox" name="section" value="investments" checked
+                                style="width: 20px; height: 20px; accent-color: var(--gold-primary);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold);">Detalle de Inversiones</div>
+                                <div class="text-xs text-muted">Rendimiento de tus acciones y ETFs.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-md p-md card"
+                            style="cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);">
+                            <input type="checkbox" name="section" value="crypto" checked
+                                style="width: 20px; height: 20px; accent-color: var(--gold-primary);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold);">Cartera de Criptomonedas</div>
+                                <div class="text-xs text-muted">Evolución de tus activos digitales.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-md p-md card"
+                            style="cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);">
+                            <input type="checkbox" name="section" value="realestate" checked
+                                style="width: 20px; height: 20px; accent-color: var(--gold-primary);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold);">Activos Inmobiliarios</div>
+                                <div class="text-xs text-muted">Valor y ubicación de tus propiedades.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-md p-md card"
+                            style="cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);">
+                            <input type="checkbox" name="section" value="transactions"
+                                style="width: 20px; height: 20px; accent-color: var(--gold-primary);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold);">Historial de Transacciones</div>
+                                <div class="text-xs text-muted">Últimos movimientos del período.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="input-group mb-xl">
+                        <label class="input-label" for="exportTimeRange">Período del Informe</label>
+                        <select id="exportTimeRange" name="timeRange" class="input input-filled">
+                            <option value="all" selected>✨ Todo el tiempo</option>
+                            <option value="month">📅 Último mes</option>
+                            <option value="quarter">⏳ Últimos 3 meses</option>
+                            <option value="half">半年 Últimos 6 meses</option>
+                            <option value="year">🗓️ Último año</option>
+                        </select>
+                        <div class="text-xs text-muted mt-xs">Se aplicará a la sección de transacciones y cálculos de
+                            resumen.</div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Formato de Archivo</label>
+                        <div class="flex gap-md">
+                            <label class="flex-1 flex items-center justify-center p-md card"
+                                style="cursor: pointer; background: var(--bg-tertiary);">
+                                <input type="radio" name="format" value="pdf" checked
+                                    style="margin-right: 8px; accent-color: var(--gold-primary);">
+                                <span>📄 PDF</span>
+                            </label>
+                            <label class="flex-1 flex items-center justify-center p-md card"
+                                style="cursor: pointer; background: var(--bg-tertiary);">
+                                <input type="radio" name="format" value="csv"
+                                    style="margin-right: 8px; accent-color: var(--gold-primary);">
+                                <span>📊 CSV</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer"
+                        style="padding-top: var(--space-xl); margin-top: var(--space-xl); border-top: 1px solid var(--border-subtle);">
+                        <button type="button" class="btn btn-ghost"
+                            onclick="Reports.closeExportModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" style="min-width: 150px;">Generar Informe</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION (Mobile) -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" onclick="Navigation.navigateTo('dashboard'); activateBottomNav(this);" data-page="dashboard">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+            <span class="nav-label" data-i18n="nav_home">Inicio</span>
+        </button>
+        <button class="nav-item" onclick="Navigation.navigateTo('transactions'); activateBottomNav(this);" data-page="transactions">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                <circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/>
+            </svg>
+            <span class="nav-label" data-i18n="nav_transactions">Movimientos</span>
+        </button>
+        <button class="nav-item nav-import" onclick="Navigation.navigateTo('import');">
+            <div class="nav-icon-wrapper">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </div>
+        </button>
+        <button class="nav-item" onclick="Navigation.navigateTo('reports'); activateBottomNav(this);" data-page="reports">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+            </svg>
+            <span class="nav-label" data-i18n="nav_reports">Informes</span>
+        </button>
+        <button class="nav-item" onclick="openMobileDrawer();" data-page="more">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/>
+            </svg>
+            <span class="nav-label" data-i18n="nav_more">Más</span>
+        </button>
+    </nav>
+
+    <!-- PWA INSTALL BANNER -->
+    <div class="pwa-install-banner" id="pwaInstallBanner" style="display: none;">
+        <div class="pwa-install-content">
+            <img src="assets/logo.svg" alt="GentleFinances" class="pwa-install-icon">
+            <div class="pwa-install-text">
+                <strong data-i18n="pwa_install_title">Instalar GentleFinances</strong>
+                <span data-i18n="pwa_install_desc">Añade la app a tu pantalla de inicio</span>
+            </div>
+        </div>
+        <div class="pwa-install-actions">
+            <button class="btn btn-ghost btn-sm" onclick="dismissInstallBanner()" data-i18n="pwa_install_later">Ahora no</button>
+            <button class="btn btn-primary btn-sm" onclick="installPWA()" data-i18n="pwa_install_btn">Instalar</button>
+        </div>
+    </div>
+
+    <!-- OFFLINE INDICATOR -->
+    <div class="offline-indicator" id="offlineIndicator" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+        <span data-i18n="pwa_offline">Sin conexión - Modo offline</span>
+    </div>
+
+    <!-- PWA UPDATE BANNER -->
+    <div class="pwa-update-banner" id="pwaUpdateBanner" style="display: none;">
+        <span data-i18n="pwa_update_available">Nueva versión disponible</span>
+        <button class="btn btn-primary btn-sm" onclick="updatePWA()" data-i18n="pwa_update_btn">Actualizar</button>
+    </div>
+
+    <!-- LIBRARIES & SERVICES -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/cache-db.js?v=1.0"></script>
+    <script src="js/firebase-sdk.js" type="module"></script>
+    <script src="js/api.js?v=3.3"></script>
+    <script src="js/auth-ui.js?v=3.1"></script>
+    <script src="js/crypto-service.js?v=3.1"></script>
+    <script src="js/spain-paths.js?v=3.1"></script>
+
+    <!-- UI & COMPONENTS -->
+    <script src="js/ux.js?v=3.1"></script>
+    <script src="js/modal.js?v=3.1"></script>
+    <script src="js/investment-modal.js?v=3.1"></script>
+
+    <!-- CORE LOGIC -->
+    <script src="js/dashboard.js?v=3.1"></script>
+    <script src="js/transactions.js?v=3.1"></script>
+    <script src="js/budgets.js?v=3.1"></script>
+    <script src="js/goals.js?v=3.1"></script>
+    <script src="js/subscriptions.js?v=3.1"></script>
+    <script src="js/portfolio.js?v=3.2"></script>
+    <script src="js/investments.js?v=3.1"></script>
+    <script src="js/crypto.js?v=3.1"></script>
+    <script src="js/realestate.js?v=3.1"></script>
+    <script src="js/spain-map.js?v=3.1"></script>
+
+    <script src="js/import.js?v=3.1"></script>
+    <script src="js/reports.js?v=3.2"></script>
+    <script src="js/settings.js?v=3.1"></script>
+    <script src="js/security.js?v=3.1"></script>
+    <script src="js/help.js?v=3.1"></script>
+
+    <!-- NAVIGATION & APP INIT -->
+    <script src="js/navigation.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/i18n.js?v=1.0"></script>
+    <script src="js/app.js?v=3.2"></script>
+
+    <script>
+        // ==========================================
+        // PWA Install Prompt
+        // ==========================================
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install banner after 3 seconds
+            setTimeout(() => {
+                const banner = document.getElementById('pwaInstallBanner');
+                const dismissed = localStorage.getItem('pwa_install_dismissed');
+                if (banner && !dismissed) {
+                    banner.style.display = 'flex';
+                }
+            }, 3000);
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((result) => {
+                    if (result.outcome === 'accepted') {
+                        console.log('✅ PWA installed');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwaInstallBanner').style.display = 'none';
+                });
+            }
+        }
+
+        function dismissInstallBanner() {
+            document.getElementById('pwaInstallBanner').style.display = 'none';
+            localStorage.setItem('pwa_install_dismissed', Date.now());
+        }
+
+        // ==========================================
+        // PWA Update Detection
+        // ==========================================
+        let newWorker = null;
+
+        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+            navigator.serviceWorker.register('./service-worker.js').then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            document.getElementById('pwaUpdateBanner').style.display = 'flex';
+                        }
+                    });
+                });
+            }).catch(err => {
+                console.warn('📱 PWA: Service Worker registration failed (expected in dev):', err.message);
+            });
+        } else if (window.location.protocol === 'file:') {
+            console.log('📱 PWA: Service Worker not available on file:// protocol. Use a local server for PWA features.');
+        }
+
+        function updatePWA() {
+            if (newWorker) {
+                newWorker.postMessage({ action: 'skipWaiting' });
+            }
+            window.location.reload();
+        }
+
+        // ==========================================
+        // Offline / Online Indicator
+        // ==========================================
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offlineIndicator');
+            if (indicator) {
+                indicator.style.display = navigator.onLine ? 'none' : 'flex';
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+
+        // ==========================================
+        // Bottom Nav Helper
+        // ==========================================
+        function activateBottomNav(btn) {
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(b => b.classList.remove('active'));
+            if (btn && !btn.classList.contains('nav-import')) {
+                btn.classList.add('active');
+            }
+        }
+
+        // Sync bottom nav with page navigation
+        window.addEventListener('pageChanged', (e) => {
+            const page = e.detail?.page;
+            if (!page) return;
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(b => {
+                const bp = b.getAttribute('data-page');
+                b.classList.toggle('active', bp === page);
+            });
+        });
+
+        // ==========================================
+        // Mobile Drawer
+        // ==========================================
+        function openMobileDrawer() {
+            document.getElementById('mobileDrawer')?.classList.add('active');
+            document.getElementById('mobileDrawerOverlay')?.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileDrawer() {
+            document.getElementById('mobileDrawer')?.classList.remove('active');
+            document.getElementById('mobileDrawerOverlay')?.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function toggleMobileSubmenu(id) {
+            const sub = document.getElementById(id);
+            if (sub) sub.classList.toggle('expanded');
+        }
+
+        // Standalone mode detection
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            document.body.classList.add('pwa-standalone');
+        }
+    </script>
+</body>
+
+</html>
