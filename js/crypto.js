@@ -44,7 +44,9 @@ const CryptoView = {
     async loadTop100() {
         try {
             const { coins } = await GentleFinancesAPI.crypto.getTop100();
+            const sym = window.Settings?.getCurrencySymbol ? Settings.getCurrencySymbol() : '€';
 
+            // Desktop table view
             const tbody = document.getElementById('crypto-tableBody');
             tbody.innerHTML = coins.map(coin => `
                 <tr class="crypto-row" onclick="CryptoView.openCoinModal('${coin.id}')">
@@ -65,7 +67,7 @@ const CryptoView = {
                     <td class="${coin.priceChange7d >= 0 ? 'text-positive' : 'text-negative'}">
                         ${coin.priceChange7d >= 0 ? '+' : ''}${coin.priceChange7d?.toFixed(2)}%
                     </td>
-                    <td>${formatLargeNumber(coin.marketCap)} ${window.Settings?.getCurrencySymbol ? Settings.getCurrencySymbol() : '€'}</td>
+                    <td>${formatLargeNumber(coin.marketCap)} ${sym}</td>
                     <td>
                         <canvas class="sparkline" id="spark-${coin.id}" width="100" height="30"></canvas>
                     </td>
@@ -77,7 +79,28 @@ const CryptoView = {
                 </tr>
             `).join('');
 
-            // Draw sparklines
+            // Mobile card view
+            const cardList = document.getElementById('crypto-cardList');
+            if (cardList) {
+                cardList.innerHTML = coins.map(coin => `
+                    <div class="crypto-card-item" onclick="CryptoView.openCoinModal('${coin.id}')">
+                        <span class="crypto-rank">${coin.marketCapRank}</span>
+                        <img src="${coin.image}" alt="${coin.name}" class="crypto-icon">
+                        <div class="crypto-info">
+                            <div class="crypto-info-name">${coin.name}</div>
+                            <div class="crypto-info-symbol">${coin.symbol}</div>
+                        </div>
+                        <div class="crypto-price-col">
+                            <div class="crypto-price-value">${formatCurrency(coin.currentPrice)}</div>
+                            <div class="crypto-price-change ${coin.priceChange24h >= 0 ? 'text-positive' : 'text-negative'}">
+                                ${coin.priceChange24h >= 0 ? '+' : ''}${coin.priceChange24h?.toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Draw sparklines (desktop only)
             coins.forEach(coin => {
                 if (coin.sparkline && coin.sparkline.length > 0) {
                     this.drawSparkline(`spark-${coin.id}`, coin.sparkline, coin.priceChange7d >= 0);
@@ -87,7 +110,9 @@ const CryptoView = {
         } catch (error) {
             console.error('Error loading top 100:', error);
             const tbody = document.getElementById('crypto-tableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-negative">Error al cargar datos</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-negative">Error al cargar datos</td></tr>';
+            const cardList = document.getElementById('crypto-cardList');
+            if (cardList) cardList.innerHTML = '<div class="text-center text-negative" style="padding: 20px;">Error al cargar datos</div>';
         }
     },
 
