@@ -1016,12 +1016,12 @@
             <!-- VIEW: CRYPTO -->
             <!-- VIEW: CRYPTO -->
             <div id="view-crypto" class="view-section" style="display: none;">
-                <div class="flex justify-between items-center mb-lg">
+                <div class="flex justify-between items-center mb-lg" style="flex-wrap: wrap; gap: var(--space-md);">
                     <div>
                         <h1 class="text-gold" style="font-size: var(--text-2xl);">Criptomonedas</h1>
                         <p class="text-secondary">Mercado crypto en tiempo real</p>
                     </div>
-                    <div class="search-container" style="width: 300px;">
+                    <div class="search-container crypto-search-mobile" style="width: 300px; position: relative;">
                         <input type="text" id="crypto-search" class="input" placeholder="Buscar cripto...">
                         <div class="search-results absolute w-full z-10 hidden" id="crypto-searchResults"></div>
                     </div>
@@ -1051,7 +1051,8 @@
                     <!-- Main Table -->
                     <div class="card">
                         <div class="card-title mb-md">Top 100 Criptomonedas</div>
-                        <div style="overflow-x: auto;">
+                        <!-- Desktop table view -->
+                        <div class="crypto-table-wrapper" style="overflow-x: auto;">
                             <table class="crypto-table">
                                 <thead>
                                     <tr>
@@ -1067,10 +1068,14 @@
                                 </thead>
                                 <tbody id="crypto-tableBody">
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">Cargando...</td>
+                                        <td colspan="8" class="text-center text-muted">Cargando...</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <!-- Mobile card view -->
+                        <div class="crypto-card-list" id="crypto-cardList">
+                            <div class="text-center text-muted" style="padding: 20px;">Cargando...</div>
                         </div>
                     </div>
 
@@ -1332,7 +1337,7 @@
                             <button class="period-btn" onclick="Reports.setPeriod('quarter')">Trimestre</button>
                             <button class="period-btn" onclick="Reports.setPeriod('year')">Año</button>
                         </div>
-                        <button class="btn btn-secondary" onclick="Reports.exportData()">
+                        <button class="btn btn-secondary" onclick="Reports.openExportModal()">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
